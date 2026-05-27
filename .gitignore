@@ -19,7 +19,7 @@ __pycache__/
 .langgraph_api/
 
 # Ignore local skill workspace assets
-.github/skills/
+.github/skills/delete
 
 # Ignore local raw conference image materials
 aidd分享图片/

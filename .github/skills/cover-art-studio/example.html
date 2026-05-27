@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Cover Generator - Premium Zen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&family=Noto+Sans+SC:wght@300;400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg-paper: #ffffff;
+            --text-main: #0f172a;
+            --text-soft: #64748b;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #06b6d4;
+            --accent-decoration: #8b5cf6;
+            --accent-seal: #e11d48;
+            --line-color: rgba(15, 23, 42, 0.08);
+        }
+        body {
+            margin: 0; padding: 20px;
+            background: #f1f5f9;
+            display: flex; flex-direction: column; align-items: center;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        
+        .toolbar {
+            margin-bottom: 20px;
+            display: flex; gap: 10px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .btn-download {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+        }
+
+        .container {
+            width: 900px;
+            height: 363px;
+            background: var(--bg-paper);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(15, 23, 42, 0.1);
+        }
+        
+        .bg-dots {
+            position: absolute; inset: 0;
+            background-image: radial-gradient(var(--line-color) 1.5px, transparent 1.5px);
+            background-size: 30px 30px;
+            z-index: 1;
+        }
+
+        /* 中心核心引擎 */
+        .core-engine {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            width: 240px;
+            height: 240px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .engine-orbit {
+            position: absolute;
+            width: 100%; height: 100%;
+            border: 1px solid var(--line-color);
+            border-radius: 50%;
+            animation: rotate 20s linear infinite;
+        }
+        .engine-hub {
+            width: 100px; height: 100px;
+            background: #fff;
+            border: 2px solid var(--accent-primary);
+            border-radius: 28px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+            position: relative;
+            z-index: 110;
+        }
+        .engine-glow {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: var(--accent-primary);
+            filter: blur(30px);
+            opacity: 0.1;
+            z-index: -1;
+        }
+        .engine-title {
+            margin-top: 20px;
+            text-align: center;
+            z-index: 110;
+        }
+        .engine-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--accent-primary);
+            letter-spacing: 0.3em;
+            font-weight: 700;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .engine-text {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--text-main);
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Skill 节点 */
+        .skill-node {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            padding: 10px 14px;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border-radius: 10px;
+            z-index: 50;
+        }
+        .node-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            text-transform: uppercase;
+            color: var(--text-soft);
+            font-weight: 700;
+        }
+        .skill-icon { color: var(--accent-primary); }
+
+        /* 节点分布 */
+        .n1 { left: 60px; top: 60px; }
+        .n2 { left: 60px; bottom: 60px; }
+        .n3 { right: 60px; top: 60px; }
+        .n4 { right: 60px; bottom: 60px; }
+
+        /* 连接线 */
+        .connector-svg {
+            position: absolute; inset: 0;
+            pointer-events: none; z-index: 10;
+        }
+
+        .author-info {
+            position: absolute; bottom: 15px; left: 20px;
+            font-size: 8px; letter-spacing: 0.2em; color: var(--text-soft);
+            opacity: 0.6;
+        }
+        .seal {
+            position: absolute; right: 20px; bottom: 15px;
+            width: 36px; height: 36px;
+            border: 1.5px solid var(--accent-seal);
+            color: var(--accent-seal);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 900; font-size: 11px;
+            transform: rotate(-10deg); opacity: 0.4;
+        }
+        
+        /* 1:1 Safety Box */
+        .safety-box {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            width: 363px;
+            height: 363px;
+            border: 1px dashed rgba(225, 29, 72, 0.2);
+            pointer-events: none;
+            z-index: 200;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <button onclick="toggleSafety()">显示/隐藏安全区 (1:1)</button>
+        <button class="btn-download" onclick="download()">下载封面 (900x363)</button>
+    </div>
+
+    <div class="container" id="cover">
+        <div class="bg-dots"></div>
+        <div class="safety-box" id="safety"></div>
+        
+        <svg class="connector-svg" width="900" height="363">
+            <line x1="450" y1="181" x2="120" y2="80" stroke="var(--line-color)" stroke-width="1" stroke-dasharray="4 4" />
+            <line x1="450" y1="181" x2="120" y2="280" stroke="var(--line-color)" stroke-width="1" stroke-dasharray="4 4" />
+            <line x1="450" y1="181" x2="780" y2="80" stroke="var(--line-color)" stroke-width="1" stroke-dasharray="4 4" />
+            <line x1="450" y1="181" x2="780" y2="280" stroke="var(--line-color)" stroke-width="1" stroke-dasharray="4 4" />
+        </svg>
+
+        <!-- 中心核心引擎 -->
+        <div class="core-engine">
+            <div class="engine-orbit"></div>
+            <div class="engine-glow"></div>
+            <div class="engine-hub">
+                <i data-lucide="zap" id="main-icon" style="color:#3b82f6; width:40px; height:40px;"></i>
+            </div>
+            <div class="engine-title">
+                <div class="engine-label" id="label">AI NATIVE PRODUCT</div>
+                <div class="engine-text" id="title">核心修炼手册</div>
+            </div>
+        </div>
+
+        <!-- 装饰节点 -->
+        <div class="skill-node n1"><i data-lucide="brain" class="skill-icon w-3 h-3" style="width:12px;height:12px;"></i><span class="node-label">Insights</span></div>
+        <div class="skill-node n2"><i data-lucide="pen-tool" class="skill-icon w-3 h-3" style="width:12px;height:12px;"></i><span class="node-label">Writer</span></div>
+        <div class="skill-node n3"><i data-lucide="image" class="skill-icon w-3 h-3" style="width:12px;height:12px;"></i><span class="node-label">Visuals</span></div>
+        <div class="skill-node n4"><i data-lucide="layout" class="skill-icon w-3 h-3" style="width:12px;height:12px;"></i><span class="node-label">Format</span></div>
+
+        <div class="author-info">chao LAB | AI GUIDED DESIGN</div>
+        <div class="seal">诚实</div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        function toggleSafety() {
+            const s = document.getElementById('safety');
+            s.style.display = s.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function download() {
+            const safety = document.getElementById('safety');
+            const originalDisplay = safety.style.display;
+            safety.style.display = 'none';
+            
+            html2canvas(document.getElementById('cover'), {
+                scale: 2,
+                backgroundColor: '#ffffff'
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'blog-cover.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                safety.style.display = originalDisplay;
+            });
+        }
+        
+        // 用于 AI 调用的接口
+        window.updateContent = (data) => {
+            if(data.title) document.getElementById('title').innerText = data.title;
+            if(data.label) document.getElementById('label').innerText = data.label;
+            if(data.icon) {
+                const iconEl = document.getElementById('main-icon');
+                iconEl.setAttribute('data-lucide', data.icon);
+                lucide.createIcons();
+            }
+        };
+    </script>
+</body>
+</html>
