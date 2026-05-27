@@ -5,6 +5,7 @@
 ## 快速入口
 
 - 本地学习门户：`output/index.html`
+- GitHub Pages 发布目录：`docs/`
 - 最终发布产物：`output/`
 - 创作源稿与素材：`content/`
 - 文档处理工具：`tools/`
@@ -18,10 +19,34 @@
 | `content/articles/` | 文章源稿、专题草稿和长期素材。 |
 | `content/assets/` | 创作阶段使用的图片、素材和附件。 |
 | `output/` | 最终可浏览、可分享、可发布的 HTML/Markdown 成品。 |
+| `docs/` | GitHub Pages 发布目录，由 `output/` 同步生成。 |
 | `output/courses/` | 系列课程、专题知识文档和实战手册。 |
 | `output/assets/` | 发布产物共享资源。 |
 | `tools/` | 文档转换、OCR、资料整理和校验脚本。 |
 | `.github/skills/` | 面向 AI Agent 的项目级专业工作流能力。 |
+
+## GitHub Pages 发布
+
+当前仓库已采用 `docs/` 作为 GitHub Pages 发布目录。
+
+你在 GitHub 仓库中将 Pages Source 设置为：
+
+- Branch：`main`
+- Folder：`/docs`
+
+本地内容仍然以 `output/` 作为主产物目录；当 `output/` 更新后，执行下面的同步脚本即可刷新 GitHub Pages 发布目录：
+
+```bash
+bash tools/sync_docs.sh
+```
+
+同步完成后提交并推送：
+
+```bash
+git add docs README.md tools/sync_docs.sh
+git commit -m "sync docs for GitHub Pages"
+git push
+```
 
 ## 新增文档流程
 

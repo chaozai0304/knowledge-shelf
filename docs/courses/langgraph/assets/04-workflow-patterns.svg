@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640">
+  <rect width="1200" height="640" rx="36" fill="#FFFFFF"/>
+  <text x="70" y="78" font-size="34" font-family="PingFang SC,Arial" font-weight="800" fill="#10213E">从 Workflow 到 Agent：五种常见形状</text>
+  <g font-family="PingFang SC,Arial" fill="#10213E" font-size="18" font-weight="700">
+    <rect x="75" y="140" width="300" height="160" rx="24" fill="#EFF6FF"/><text x="115" y="185">Prompt Chaining</text><text x="115" y="225" font-size="15" fill="#64748B">一步处理完，再交给下一步</text>
+    <rect x="450" y="140" width="300" height="160" rx="24" fill="#ECFEFF"/><text x="490" y="185">Parallelization</text><text x="490" y="225" font-size="15" fill="#64748B">多个子任务同时跑，再汇总</text>
+    <rect x="825" y="140" width="300" height="160" rx="24" fill="#FAF5FF"/><text x="865" y="185">Routing</text><text x="865" y="225" font-size="15" fill="#64748B">先判断类型，再走专门路径</text>
+    <rect x="250" y="370" width="300" height="160" rx="24" fill="#FFF7ED"/><text x="290" y="415">Evaluator-Optimizer</text><text x="290" y="455" font-size="15" fill="#64748B">生成、评价、不合格就重来</text>
+    <rect x="650" y="370" width="300" height="160" rx="24" fill="#F0FDF4"/><text x="690" y="415">Agent</text><text x="690" y="455" font-size="15" fill="#64748B">模型动态决定用什么工具</text>
+  </g>
+</svg>

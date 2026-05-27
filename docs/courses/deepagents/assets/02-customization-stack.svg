@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360">
+  <rect width="900" height="360" rx="28" fill="#F7F8FC"/>
+  <text x="450" y="45" text-anchor="middle" font-size="28" font-family="Arial" font-weight="700" fill="#10213E">create_deep_agent 定制栈</text>
+  <g font-family="Arial" font-size="16" text-anchor="middle">
+    <rect x="300" y="80" width="300" height="44" rx="12" fill="#10213E"/><text x="450" y="108" fill="white" font-weight="700">用户任务 / messages</text>
+    <rect x="270" y="138" width="360" height="44" rx="12" fill="#DCE8FF"/><text x="450" y="166" fill="#10213E">system_prompt + profile suffix</text>
+    <rect x="240" y="196" width="420" height="44" rx="12" fill="#ECEAFF"/><text x="450" y="224" fill="#10213E">middleware：todo / filesystem / skills / HITL</text>
+    <rect x="210" y="254" width="480" height="44" rx="12" fill="#E9F9F0"/><text x="450" y="282" fill="#10213E">tools + subagents + response_format</text>
+    <rect x="180" y="312" width="540" height="34" rx="12" fill="#FFF1DE"/><text x="450" y="335" fill="#10213E">model：provider:model 或 init_chat_model</text>
+  </g>
+</svg>

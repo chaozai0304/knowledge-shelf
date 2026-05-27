@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+  <meta charset="utf-8">
+  <title>Deep Agents 第四讲：子智能体、人机协同与权限边界</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #ffffff; color: #10213E; margin: 0; padding: 20px; font-family: MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif; }
+    #page-content { max-width: 667px; margin: 0 auto; }
+    .rich_media_title { font-size: 24px; font-weight: bold; line-height: 1.4; color: #10213E; margin-bottom: 16px; }
+    .rich_media_meta_list { color: #64748B; font-size: 14px; margin-bottom: 32px; }
+    .rich_media_meta_text { margin-right: 16px; }
+    table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+    th, td { padding: 12px 10px; border: 1px solid #F5F5F6; text-align: left; vertical-align: top; }
+    thead th { background-color: #10213E; color: #ffffff; font-weight: bold; }
+    tbody tr:nth-child(even) { background-color: #F5F5F6; }
+  </style>
+</head>
+<body>
+<div id="page-content">
+  
+  <h1 class="rich_media_title">Deep Agents 第四讲：子智能体、人机协同与权限边界</h1>
+  <div class="rich_media_meta_list">
+    <span class="rich_media_meta_text">chao</span>
+    <span class="rich_media_meta_text">2026-05-21</span>
+  </div>
+  <div id="js_content">
+    
+<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5MDAiIGhlaWdodD0iMzYwIiB2aWV3Qm94PSIwIDAgOTAwIDM2MCI+CiAgPHJlY3Qgd2lkdGg9IjkwMCIgaGVpZ2h0PSIzNjAiIHJ4PSIyOCIgZmlsbD0iI0Y3RjhGQyIvPgogIDx0ZXh0IHg9IjQ1MCIgeT0iNDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMjgiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzEwMjEzRSI+5a2Q5pm66IO95L2TICsg5Lq65bel5a6h5om5ICsg5p2D6ZmQPC90ZXh0PgogIDxnIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNSIgZmlsbD0iIzEwMjEzRSI+CiAgICA8cmVjdCB4PSI1NSIgeT0iMTI1IiB3aWR0aD0iMTM1IiBoZWlnaHQ9IjcwIiByeD0iMTYiIGZpbGw9IiNFOEYwRkYiIHN0cm9rZT0iIzJGNkJGRiIvPjx0ZXh0IHg9IjEyMiIgeT0iMTY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iNzAwIj7kuLsgQWdlbnQ8L3RleHQ+CiAgICA8cmVjdCB4PSIyNjAiIHk9Ijc1IiB3aWR0aD0iMTU1IiBoZWlnaHQ9IjcwIiByeD0iMTYiIGZpbGw9IiNFQ0VBRkYiIHN0cm9rZT0iIzYyNUQ5QyIvPjx0ZXh0IHg9IjMzNyIgeT0iMTE2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7lkIjop4TlrZDmmbrog73kvZM8L3RleHQ+CiAgICA8cmVjdCB4PSIyNjAiIHk9IjIwNSIgd2lkdGg9IjE1NSIgaGVpZ2h0PSI3MCIgcng9IjE2IiBmaWxsPSIjRUNFQUZGIiBzdHJva2U9IiM2MjVEOUMiLz48dGV4dCB4PSIzMzciIHk9IjI0NiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+56CU56m25a2Q5pm66IO95L2TPC90ZXh0PgogICAgPHJlY3QgeD0iNTA1IiB5PSI5NSIgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxMTAiIHJ4PSIxOCIgZmlsbD0iI0ZGRjRFOCIgc3Ryb2tlPSIjRkY5RjJGIi8+PHRleHQgeD0iNTgwIiB5PSIxMzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSI3MDAiPmludGVycnVwdF9vbjwvdGV4dD48dGV4dCB4PSI1ODAiIHk9IjE2MiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+YXBwcm92ZTwvdGV4dD48dGV4dCB4PSI1ODAiIHk9IjE4NCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+ZWRpdCAvIHJlamVjdDwvdGV4dD4KICAgIDxyZWN0IHg9IjcyMCIgeT0iMTAwIiB3aWR0aD0iMTMwIiBoZWlnaHQ9IjEwMCIgcng9IjE4IiBmaWxsPSIjRUFGQkYzIiBzdHJva2U9IiMyRkE2NkEiLz48dGV4dCB4PSI3ODUiIHk9IjEzNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9IjcwMCI+5p2D6ZmQ5bGCPC90ZXh0Pjx0ZXh0IHg9Ijc4NSIgeT0iMTY1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5hbGxvdyAvIGRlbnk8L3RleHQ+PHRleHQgeD0iNzg1IiB5PSIxODciIHRleHQtYW5jaG9yPSJtaWRkbGUiPmZpcnN0IG1hdGNoPC90ZXh0PgogIDwvZz4KICA8ZyBzdHJva2U9IiMyRjZCRkYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiPjxwYXRoIGQ9Ik0xOTAgMTUwIEwyNjAgMTEwIi8+PHBhdGggZD0iTTE5MCAxNzAgTDI2MCAyNDAiLz48cGF0aCBkPSJNNDE1IDExMCBINTA1Ii8+PHBhdGggZD0iTTY1NSAxNTAgSDcyMCIvPjwvZz4KICA8ZGVmcz48bWFya2VyIGlkPSJhcnJvdyIgbWFya2VyV2lkdGg9IjEwIiBtYXJrZXJIZWlnaHQ9IjEwIiByZWZYPSI4IiByZWZZPSIzIiBvcmllbnQ9ImF1dG8iPjxwYXRoIGQ9Ik0wLDAgTDAsNiBMOSwzIHoiIGZpbGw9IiMyRjZCRkYiLz48L21hcmtlcj48L2RlZnM+Cjwvc3ZnPgo=" alt="子智能体 + 人工审批 + 权限" style="max-width:100%;height:auto;border-radius:8px;display:block;margin:12px 0;box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-0" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-0" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-0)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-0)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">子智能体不是“多开几个聊天窗口”</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Deep Agents 的 subagents 解决的是上下文隔离和专家分工。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">主 Agent 像项目经理，负责判断任务怎么拆；子智能体像专家，负责在自己的上下文里完成一小段工作。主 Agent 不需要看到所有中间资料，只拿最终结论。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">适合拆成子智能体的任务：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">深度资料研究。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">代码审查。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">合规审查。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">数据分析。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">文案润色。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">长文档摘要。</span></li>
+
+</ul>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-1" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-1)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-1)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">默认 general-purpose 子智能体</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Deep Agents 默认提供一个 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">general-purpose</code> 子智能体。它适合处理通用研究、摘要和复杂子任务。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果你不想使用它，可以关闭；如果你要更稳定的业务行为，建议定义自己的子智能体：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">subagents=[
+    {
+        "name": "compliance-reviewer",
+        "description": "审查报告是否包含隐私、合规和未经批准的承诺。",
+        "system_prompt": "你是合规审查员。只输出风险、证据和修改建议。",
+        "tools": [read_policy],
+    }
+]</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">description</code> 很关键。主 Agent 会根据它判断什么时候委派任务。</p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-2" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-2)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-2)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">同步子智能体和异步子智能体</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方文档还提供 async subagents。区别可以这样理解：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>适合场景</th>
+<th>大白话</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sync subagent</td>
+<td>短任务、需要马上等结果</td>
+<td>派活后等专家回来</td>
+</tr>
+<tr>
+<td>async subagent</td>
+<td>长任务、后台运行、可轮询</td>
+<td>派活后先干别的，晚点查进度</td>
+</tr>
+</tbody></table>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">异步子智能体会暴露任务工具：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">start_async_task</code></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">check_async_task</code></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">update_async_task</code></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">cancel_async_task</code></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">list_async_tasks</code></span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">它适合调研、批处理、长时间分析这类任务。</p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-3" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#2563EB" />
+            <stop offset="100%" stop-color="#14B8A6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-3)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-3)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #EFF6FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #2563EB 0%, #14B8A6 100%);box-shadow:0 0 0 1px rgba(37,99,235,0.22), 0 6px 14px rgba(37,99,235,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">HITL：危险动作前让人插一脚</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Human-in-the-loop 基于 LangGraph interrupt。你可以用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">interrupt_on</code> 指定哪些工具需要审批：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">interrupt_on={
+    "publish_report": {"allowed_decisions": ["approve", "edit", "reject"]},
+    "read_policy": False,
+}</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">人可以做四类决策：</p>
+<table>
+<thead>
+<tr>
+<th>决策</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>approve</td>
+<td>按原参数执行</td>
+</tr>
+<tr>
+<td>edit</td>
+<td>修改参数后执行</td>
+</tr>
+<tr>
+<td>reject</td>
+<td>不执行这个工具</td>
+</tr>
+<tr>
+<td>respond</td>
+<td>直接把人的回复作为工具结果</td>
+</tr>
+</tbody></table>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">注意：HITL 必须配 checkpointer。因为中断后要恢复到原来的执行现场。</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">from langgraph.checkpoint.memory import MemorySaver
+
+checkpointer = MemorySaver()</code></pre></section>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(147,51,234,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-4" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#9333EA" />
+            <stop offset="100%" stop-color="#F59E0B" />
+        </linearGradient>
+        <radialGradient id="h2-rad-4" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-4)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-4)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #FAF5FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #9333EA 0%, #F59E0B 100%);box-shadow:0 0 0 1px rgba(147,51,234,0.22), 0 6px 14px rgba(147,51,234,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">Permissions：文件系统的声明式规则</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Deep Agents 的 permissions 用来控制内置文件系统工具可以读写哪些路径。</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">FilesystemPermission(
+    operations=["write"],
+    paths=["/memories/**"],
+    mode="deny",
+)</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">规则是 first-match-wins：第一条命中的规则决定结果。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">一个常见安全配置：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">permissions=[
+    FilesystemPermission(operations=["read", "write"], paths=["/workspace/.env"], mode="deny"),
+    FilesystemPermission(operations=["write"], paths=["/memories/**"], mode="deny"),
+    FilesystemPermission(operations=["read", "write"], paths=["/workspace/**"], mode="allow"),
+    FilesystemPermission(operations=["read", "write"], paths=["/**"], mode="deny"),
+]</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这表示：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">.env</code> 不能读写。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">记忆只读。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">工作区可读写。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">其他路径全部拒绝。</span></li>
+
+</ul>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-5" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-5" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-5)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-5)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">permissions 的边界</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方文档也提醒了限制：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">permissions 只管内置文件系统工具。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">不管自定义工具。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">不管 MCP 工具。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">不管 sandbox 里的 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">execute</code> 任意命令。</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果你需要控制自定义工具，应该写工具自身的校验，或用 backend policy hooks。</p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-6" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-6" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-6)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-6)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">Sandboxes：隔离执行环境</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果 Agent 需要运行 shell、安装依赖、跑测试，就需要 sandbox backend。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Sandbox 的价值是把 Agent 的执行环境和你的主机隔离开。它通常会提供：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">文件系统工具。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">execute</code> 命令执行工具。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">与宿主机隔离的运行边界。</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">但 sandbox 不是万能保险箱。它防止 Agent 读你的本地文件，却不能防止上下文注入让 Agent 在 sandbox 内乱跑命令或发网络请求。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">安全建议：</p>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">不要把秘密放进 sandbox。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">需要外部 API 时，优先用宿主机工具封装认证。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">高风险操作开启 HITL。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">能禁网络就禁网络。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">把 sandbox 输出当作不可信输入。</span></li>
+
+</ol>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-7" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-7" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-7)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-7)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">第四讲要记住的 5 句话</span></span></h2>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">子智能体的核心价值是上下文隔离。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">description 决定主 Agent 会不会正确委派。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">HITL 需要 checkpointer 和同一个 thread_id。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">permissions 是路径级规则，first-match-wins。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">sandbox 隔离宿主机，但不能替代权限、审批和审计。</span></span></li>
+
+</ol>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">下一讲进入解释器、流式输出和生产化部署。</p>
+
+    
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:32px 0 12px 0;padding:0;">
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Deep Agents</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Subagents</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># HITL</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Permissions</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># 安全</span>
+</section>
+
+  </div>
+</div>
+</body>
+</html>

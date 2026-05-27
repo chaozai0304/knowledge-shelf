@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+  <meta charset="utf-8">
+  <title>LangGraph 第一讲：安装与快速入门，从一个计算器 Agent 开始</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #ffffff; color: #10213E; margin: 0; padding: 20px; font-family: MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif; }
+    #page-content { max-width: 667px; margin: 0 auto; }
+    .rich_media_title { font-size: 24px; font-weight: bold; line-height: 1.4; color: #10213E; margin-bottom: 16px; }
+    .rich_media_meta_list { color: #64748B; font-size: 14px; margin-bottom: 32px; }
+    .rich_media_meta_text { margin-right: 16px; }
+    table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+    th, td { padding: 12px 10px; border: 1px solid #F5F5F6; text-align: left; vertical-align: top; }
+    thead th { background-color: #10213E; color: #ffffff; font-weight: bold; }
+    tbody tr:nth-child(even) { background-color: #F5F5F6; }
+  </style>
+</head>
+<body>
+<div id="page-content">
+  
+  <h1 class="rich_media_title">LangGraph 第一讲：安装与快速入门，从一个计算器 Agent 开始</h1>
+  <div class="rich_media_meta_list">
+    <span class="rich_media_meta_text">chao</span>
+    <span class="rich_media_meta_text">2026-05-15</span>
+  </div>
+  <div id="js_content">
+    
+<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjUyMCIgdmlld0JveD0iMCAwIDEyMDAgNTIwIj4KICA8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB4Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iIzVEQjJFMiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzYyNUQ5QyIvPjwvbGluZWFyR3JhZGllbnQ+PGZpbHRlciBpZD0icyI+PGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjEwIiBzdGREZXZpYXRpb249IjEyIiBmbG9vZC1vcGFjaXR5PSIwLjE4Ii8+PC9maWx0ZXI+PC9kZWZzPgogIDxyZWN0IHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjUyMCIgcng9IjM2IiBmaWxsPSIjRjVGN0ZCIi8+CiAgPHRleHQgeD0iNzAiIHk9IjgyIiBmb250LXNpemU9IjM0IiBmb250LWZhbWlseT0iUGluZ0ZhbmcgU0MsQXJpYWwiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMxMDIxM0UiPkxhbmdHcmFwaCDlv6vpgJ/lhaXpl6jvvJrorqHnrpflmaggQWdlbnQg6Zet546vPC90ZXh0PgogIDx0ZXh0IHg9IjcwIiB5PSIxMjIiIGZvbnQtc2l6ZT0iMTgiIGZvbnQtZmFtaWx5PSJQaW5nRmFuZyBTQyxBcmlhbCIgZmlsbD0iIzY0NzQ4QiI+5qih5Z6L6LSf6LSj5Yaz562W77yM5bel5YW36LSf6LSj5omn6KGM77yM5p2h5Lu26L656LSf6LSj5Yik5pat5piv5ZCm57un57utPC90ZXh0PgogIDxnIGZpbHRlcj0idXJsKCNzKSIgZm9udC1mYW1pbHk9IlBpbmdGYW5nIFNDLEFyaWFsIiBmb250LXNpemU9IjIwIiBmb250LXdlaWdodD0iNzAwIj4KICAgIDxyZWN0IHg9IjgwIiB5PSIyMjAiIHdpZHRoPSIxODAiIGhlaWdodD0iODgiIHJ4PSIyMiIgZmlsbD0iI2ZmZiIvPjx0ZXh0IHg9IjEyOCIgeT0iMjcyIiBmaWxsPSIjMTAyMTNFIj7nlKjmiLfovpPlhaU8L3RleHQ+CiAgICA8cmVjdCB4PSIzNDUiIHk9IjIyMCIgd2lkdGg9IjE5MCIgaGVpZ2h0PSI4OCIgcng9IjIyIiBmaWxsPSIjZmZmIi8+PHRleHQgeD0iMzk0IiB5PSIyNzIiIGZpbGw9IiMxMDIxM0UiPkxMTSDoioLngrk8L3RleHQ+CiAgICA8cmVjdCB4PSI2MjAiIHk9IjIyMCIgd2lkdGg9IjE5MCIgaGVpZ2h0PSI4OCIgcng9IjIyIiBmaWxsPSIjZmZmIi8+PHRleHQgeD0iNjYyIiB5PSIyNzIiIGZpbGw9IiMxMDIxM0UiPuW3peWFt+iKgueCuTwvdGV4dD4KICAgIDxyZWN0IHg9Ijg5NSIgeT0iMjIwIiB3aWR0aD0iMTkwIiBoZWlnaHQ9Ijg4IiByeD0iMjIiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSI5MzgiIHk9IjI3MiIgZmlsbD0iIzEwMjEzRSI+5pyA57uI5Zue562UPC90ZXh0PgogIDwvZz4KICA8ZyBzdHJva2U9InVybCgjZykiIHN0cm9rZS13aWR0aD0iNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik0yNjAgMjY0SDMzOCIvPjxwYXRoIGQ9Ik0zMjcgMjUybDE0IDEyLTE0IDEyIi8+CiAgICA8cGF0aCBkPSJNNTM1IDI2NEg2MTMiLz48cGF0aCBkPSJNNjAyIDI1MmwxNCAxMi0xNCAxMiIvPgogICAgPHBhdGggZD0iTTgxMCAyNjRIODg4Ii8+PHBhdGggZD0iTTg3NyAyNTJsMTQgMTItMTQgMTIiLz4KICAgIDxwYXRoIGQ9Ik03MTUgMzE4IEM3MTUgMzkwIDQ0MCAzOTAgNDQwIDMxOCIvPjxwYXRoIGQ9Ik00NTIgMzI5bC0xMi0xNC0xMiAxNCIvPgogIDwvZz4KICA8dGV4dCB4PSI1NjYiIHk9IjM5NiIgZm9udC1zaXplPSIxOCIgZm9udC1mYW1pbHk9IlBpbmdGYW5nIFNDLEFyaWFsIiBmaWxsPSIjNjI1RDlDIiBmb250LXdlaWdodD0iNzAwIj7lt6Xlhbfnu5Pmnpzlm57liLAgTExN77yM5YaN5Yik5pat5piv5ZCm57un57utPC90ZXh0Pgo8L3N2Zz4K" alt="LangGraph 快速入门闭环" style="max-width:100%;height:auto;border-radius:8px;display:block;margin:12px 0;box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-0" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-0" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-0)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-0)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">为什么第一讲先写“计算器 Agent”</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">LangGraph 的官方快速入门用的是一个计算器 Agent：模型接收问题，判断是否需要调用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">add</code>、<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">multiply</code>、<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">divide</code> 这些工具；如果需要，就进入工具节点；工具执行完以后，结果再回到模型；直到模型不再请求工具调用，图才结束。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这个例子小，但它把 LangGraph 最核心的结构都摆出来了：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">State</span>：全流程共享的数据小本子。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">Node</span>：真正干活的函数，比如调用模型、调用工具。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">Edge</span>：告诉图下一步去哪。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">Conditional Edge</span>：根据当前状态判断下一步去哪。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">Compile</span>：图必须编译后才能运行。</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">一句大白话：<span style="font-weight:bold;color:#625D9C;">LangGraph 不是替你写 Prompt 的库，而是帮你把 Agent 的执行过程变成一张可控、可恢复、可观察的图。</span></p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-1" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-1)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-1)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">这一组内容建议拆成 4 篇</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方文档从安装、快速入门、本地服务，到 thinking-in-langgraph 和 workflows-agents，信息量比较大。直接塞进一篇会很长，也不利于讲课节奏。建议拆成 4 篇：</p>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">安装与快速入门</span>：先跑通第一个计算器 Agent。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">Graph API 与用图思考</span>：讲 State、Node、Edge、Command、interrupt。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">工作流与 Agent 模式</span>：讲链式、并行、路由、编排、评估优化和 Agent 循环。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">本地服务与 Studio 调试</span>：把 graph 变成 HTTP 服务，并用 Studio 可视化调试。</span></li>
+
+</ol>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-2" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-2)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-2)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">安装 LangGraph</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">基础安装很简单：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">pip install -U langgraph</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">但真实开发一般还会用到 LangChain 的模型和工具接口：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">pip install -U langchain langchain-openai python-dotenv</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果要跑本系列的完整示例，直接使用代码目录中的依赖文件：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">cd /Users/chao/Desktop/分享文档库/output/courses/langgraph/code
+pip install -r requirements.txt</code></pre></section>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-3" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#2563EB" />
+            <stop offset="100%" stop-color="#14B8A6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-3)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-3)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #EFF6FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #2563EB 0%, #14B8A6 100%);box-shadow:0 0 0 1px rgba(37,99,235,0.22), 0 6px 14px rgba(37,99,235,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">配置模型环境变量</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">示例默认使用 OpenAI 兼容接口。你可以接 OpenAI，也可以接公司内部网关、国产模型网关或 LiteLLM 网关。</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">OPENAI_API_KEY=你的 key
+OPENAI_BASE_URL=https://你的模型网关/v1
+OPENAI_MODEL=你的模型名</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">大白话解释：<span style="font-weight:bold;color:#625D9C;">LangGraph 关心的是“节点怎么流转”，不关心你背后用哪家模型。只要 LangChain 的 ChatModel 能调通，就能放进节点里。</span></p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(147,51,234,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-4" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#9333EA" />
+            <stop offset="100%" stop-color="#F59E0B" />
+        </linearGradient>
+        <radialGradient id="h2-rad-4" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-4)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-4)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #FAF5FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #9333EA 0%, #F59E0B 100%);box-shadow:0 0 0 1px rgba(147,51,234,0.22), 0 6px 14px rgba(147,51,234,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">快速入门图结构</span></span></h2>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">flowchart LR
+    START([START]) --&gt; LLM[LLM 节点]
+    LLM --&gt;|需要工具| TOOL[工具节点]
+    TOOL --&gt; LLM
+    LLM --&gt;|不需要工具| END([END])</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这个图里最关键的是循环：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">第一次 LLM 看到问题：可能不知道最终答案，但知道要调用工具。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">Tool Node 执行工具：把真实计算结果写回消息列表。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">LLM 再看工具结果：决定继续调用工具，还是给最终答案。</span></li>
+
+</ul>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-5" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-5" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-5)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-5)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">快速入门完整代码</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">代码已保存到：<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">output/courses/langgraph/code/01_install_quickstart_calculator.py</code>。</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">"""01：安装与快速入门 —— 一个最小计算器 Agent。
+
+运行前：
+1. 安装依赖：pip install -r requirements.txt
+2. 复制 .env.example 为 .env，填写 OPENAI_API_KEY / OPENAI_BASE_URL / OPENAI_MODEL
+3. 执行：python 01_install_quickstart_calculator.py
+"""
+
+from __future__ import annotations
+
+import operator
+from typing import Annotated, Literal
+
+from langchain.messages import AnyMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain.tools import tool
+from typing_extensions import TypedDict
+
+from langgraph.graph import END, START, StateGraph
+
+from common import make_model, print_section, save_mermaid
+
+
+@tool
+def multiply(a: int, b: int) -&gt; int:
+    """Multiply a and b."""
+    return a * b
+
+
+@tool
+def add(a: int, b: int) -&gt; int:
+    """Add a and b."""
+    return a + b
+
+
+@tool
+def divide(a: int, b: int) -&gt; float:
+    """Divide a by b."""
+    return a / b
+
+
+class CalculatorState(TypedDict):
+    # Annotated[..., operator.add] 表示新消息追加到旧消息后面。
+    messages: Annotated[list[AnyMessage], operator.add]
+    llm_calls: int
+
+
+tools = [add, multiply, divide]
+tools_by_name = {t.name: t for t in tools}
+model = make_model(temperature=0)
+model_with_tools = model.bind_tools(tools)
+
+
+def llm_call(state: CalculatorState) -&gt; dict:
+    """让模型决定：直接回答，还是先调用工具。"""
+    response = model_with_tools.invoke(
+        [
+            SystemMessage(
+                content=(
+                    "You are a helpful calculator assistant. "
+                    "Use tools for arithmetic and keep the final answer concise."
+                )
+            )
+        ]
+        + state["messages"]
+    )
+    return {"messages": [response], "llm_calls": state.get("llm_calls", 0) + 1}
+
+
+def tool_node(state: CalculatorState) -&gt; dict:
+    """执行模型请求的工具调用，并把工具结果写回 messages。"""
+    result: list[ToolMessage] = []
+    last_message = state["messages"][-1]
+
+    for tool_call in last_message.tool_calls:
+        tool_fn = tools_by_name[tool_call["name"]]
+        observation = tool_fn.invoke(tool_call["args"])
+        result.append(ToolMessage(content=str(observation), tool_call_id=tool_call["id"]))
+
+    return {"messages": result}
+
+
+def should_continue(state: CalculatorState) -&gt; Literal["tool_node", "__end__"]:
+    """如果模型还要调工具，就去工具节点；否则结束。"""
+    last_message = state["messages"][-1]
+    if getattr(last_message, "tool_calls", None):
+        return "tool_node"
+    return END
+
+
+def build_graph():
+    builder = StateGraph(CalculatorState)
+    builder.add_node("llm_call", llm_call)
+    builder.add_node("tool_node", tool_node)
+
+    builder.add_edge(START, "llm_call")
+    builder.add_conditional_edges("llm_call", should_continue, ["tool_node", END])
+    builder.add_edge("tool_node", "llm_call")
+
+    return builder.compile()
+
+
+def main() -&gt; None:
+    graph = build_graph()
+    mermaid_path = save_mermaid(graph, "01_calculator_agent.mmd")
+
+    print_section("图结构已保存")
+    print(mermaid_path)
+
+    result = graph.invoke(
+        {
+            "messages": [HumanMessage(content="先计算 7 乘以 8，再把结果加 6，最后除以 2。")],
+            "llm_calls": 0,
+        }
+    )
+
+    print_section("完整消息轨迹")
+    for message in result["messages"]:
+        message.pretty_print()
+
+    print_section("LLM 调用次数")
+    print(result["llm_calls"])
+
+
+if __name__ == "__main__":
+    main()</code></pre></section>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-6" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-6" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-6)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-6)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">代码怎么理解</span></span></h2>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #5B7CFF33);">
+    <defs>
+        <linearGradient id="h3-grad-0" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#5B7CFF" />
+            <stop offset="100%" stop-color="#69EACB" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-0)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">State：不是全局变量，而是图的“状态快照”</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #5B7CFF 0%, #69EACB 100%);box-shadow:0 3px 10px #5B7CFF22;"></span></span></h3>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">class CalculatorState(TypedDict):
+    messages: Annotated[list[AnyMessage], operator.add]
+    llm_calls: int</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这里的 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">messages</code> 用了 reducer：<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">operator.add</code>。意思是每个节点返回的新消息会追加到旧消息后面。否则默认行为是覆盖，聊天历史就只剩最后一次更新了。</p>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #A855F733);">
+    <defs>
+        <linearGradient id="h3-grad-1" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#A855F7" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-1)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">Node：就是普通 Python 函数</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #A855F7 0%, #F472B6 100%);box-shadow:0 3px 10px #A855F722;"></span></span></h3>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">llm_call</code> 是模型节点，<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">tool_node</code> 是工具节点。LangGraph 不要求节点一定是 LLM；节点可以是查询数据库、调用接口、读文件、发消息，也可以只是一个普通 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">if</code> 判断。</p>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #0891B233);">
+    <defs>
+        <linearGradient id="h3-grad-2" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0891B2" />
+            <stop offset="100%" stop-color="#34D399" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-2)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">Edge：固定边和条件边</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #0891B2 0%, #34D399 100%);box-shadow:0 3px 10px #0891B222;"></span></span></h3>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">builder.add_edge(START, "llm_call")
+builder.add_conditional_edges("llm_call", should_continue, ["tool_node", END])
+builder.add_edge("tool_node", "llm_call")</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">大白话：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">START -&gt; llm_call</code>：用户输入进来后先问模型。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">llm_call -&gt; tool_node 或 END</code>：模型要工具就去工具节点，不要工具就结束。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">tool_node -&gt; llm_call</code>：工具执行完，结果要回给模型继续判断。</span></li>
+
+</ul>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-7" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-7" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-7)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-7)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">第一讲要记住的 5 句话</span></span></h2>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">LangGraph 的核心是图，不是 Prompt。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">State 是节点之间传递信息的唯一可靠方式。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">Node 是函数，Edge 是路由。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">工具调用不是魔法，本质是模型提出工具请求，代码执行工具，再把结果交回模型。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">图必须 compile 后才能运行。</span></span></li>
+
+</ol>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-8" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#2563EB" />
+            <stop offset="100%" stop-color="#14B8A6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-8" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-8)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-8)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #EFF6FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #2563EB 0%, #14B8A6 100%);box-shadow:0 0 0 1px rgba(37,99,235,0.22), 0 6px 14px rgba(37,99,235,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">下一篇讲什么</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">下一篇会进入 Graph API 和 thinking-in-langgraph：如何把一个客服邮件 Agent 从业务流程拆成节点，什么时候用普通边，什么时候用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">Command</code>，什么时候必须引入 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">interrupt</code> 和 checkpointer。</p>
+
+    
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:32px 0 12px 0;padding:0;">
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># LangGraph</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># AI Agent</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Python</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># 快速入门</span>
+</section>
+
+  </div>
+</div>
+</body>
+</html>

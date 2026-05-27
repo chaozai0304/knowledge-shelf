@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+  <meta charset="utf-8">
+  <title>LangChain 第四讲：流式传输，别让用户盯着空白页等模型</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #ffffff; color: #10213E; margin: 0; padding: 20px; font-family: MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif; }
+    #page-content { max-width: 667px; margin: 0 auto; }
+    .rich_media_title { font-size: 24px; font-weight: bold; line-height: 1.4; color: #10213E; margin-bottom: 16px; }
+    .rich_media_meta_list { color: #64748B; font-size: 14px; margin-bottom: 32px; }
+    .rich_media_meta_text { margin-right: 16px; }
+    table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+    th, td { padding: 12px 10px; border: 1px solid #F5F5F6; text-align: left; vertical-align: top; }
+    thead th { background-color: #10213E; color: #ffffff; font-weight: bold; }
+    tbody tr:nth-child(even) { background-color: #F5F5F6; }
+  </style>
+</head>
+<body>
+<div id="page-content">
+  
+  <h1 class="rich_media_title">LangChain 第四讲：流式传输，别让用户盯着空白页等模型</h1>
+  <div class="rich_media_meta_list">
+    <span class="rich_media_meta_text">GitHub Copilot</span>
+    <span class="rich_media_meta_text">2026-05-09</span>
+  </div>
+  <div id="js_content">
+    
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">第三讲聊完工具和短时记忆之后，第四讲要补上的，是 Agent 的另一个关键体验层：<span style="font-weight:bold;color:#625D9C;">流式传输</span>。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果说普通调用像是在餐厅等菜：你只知道自己点了什么，但不知道厨房在忙什么。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">那流式传输更像开放式厨房：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">模型开始想了，你能看到</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">工具开始查了，你能看到</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">中间状态变了，你能看到</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">最终答案还没回来，用户也不会觉得系统卡死了</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">LangChain 官方文档里把这件事讲得很清楚：Streaming 不是单纯“一个字一个字吐出来”，它更像是把 Agent 运行过程拆成可观察的实时信号。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这篇只讲一件事：<span style="font-weight:bold;color:#625D9C;">怎么把 LangChain Agent 的运行过程实时展示出来。</span></p>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-0" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-0" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-0)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-0)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">先说结论：流式传输解决的不是炫技，而是等待感</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">大模型应用最容易让人焦虑的地方，不是慢。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">而是<span style="font-weight:bold;color:#625D9C;">不知道它是不是还活着</span>。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">尤其是 Agent 场景，它不只是生成文本，还可能经历：</p>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">模型判断要不要调用工具</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">工具开始执行</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">工具返回结果</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">模型读工具结果</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">模型组织最终答案</span></li>
+
+</ol>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果你只用普通 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">invoke</code>，用户看到的就是一段漫长沉默。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果你用 streaming，用户看到的是：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">“正在识别问题类型”</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">“正在查询工单系统”</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">“已读取退款记录”</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">“正在生成处理建议”</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这就是体验上的差别。</p>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><span style="font-weight:bold;color:#625D9C;">流式传输不是让模型更快，而是让用户更早知道系统正在认真工作。</span></p>
+
+</section>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-1" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-1)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-1)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">官网里最重要的三个模式</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">LangChain 官方 JavaScript 文档里讲的是 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">streamMode</code>，Python 里对应的是 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">stream_mode</code>。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">别被名字绕住，核心就三类：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>Python 写法</th>
+<th>适合看什么</th>
+<th>大白话解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>代理进度</td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">stream_mode=&quot;updates&quot;</code></td>
+<td>Agent 每一步状态</td>
+<td>看 Agent 走到哪一步了</td>
+</tr>
+<tr>
+<td>模型 token</td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">stream_mode=&quot;messages&quot;</code></td>
+<td>LLM 逐段输出</td>
+<td>看模型正在吐哪些字、哪些工具调用片段</td>
+</tr>
+<tr>
+<td>自定义更新</td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">stream_mode=&quot;custom&quot;</code></td>
+<td>工具内部自己发的状态</td>
+<td>工具边干活边汇报进度</td>
+</tr>
+</tbody></table>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方 JS 文档还提到 Event Streaming，也就是 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">streamEvents(..., version=&quot;v3&quot;)</code> 这种更偏前端和生产 UI 的做法。它会把 messages、tool calls、state、final output 做成 typed projections。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">但如果你刚开始学，我建议先掌握这三个基础模式：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">updates  看流程
+messages 看文本和工具调用 token
+custom   看你自己定义的业务进度</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这三个吃透了，再上 Event Streaming 会顺很多。</p>
+
+<img src="data:image/png;base64,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" alt="LangChain 流式传输三种模式" style="max-width:100%;height:auto;border-radius:8px;display:block;margin:12px 0;box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这张图对应官方文档里的三个基础流模式：<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">updates</code> 看 Agent 步骤，<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">messages</code> 看模型输出片段，<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">custom</code> 看工具或节点主动发出的业务进度。</p>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-2" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-2)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-2)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">第一种：updates，看 Agent 当前走到哪一步</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">updates</code> 最适合展示“流程进度”。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">比如一个售后助手收到用户问题后，可能会先调用查询工具，再生成回复。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">你不一定关心每一个 token，但你很关心它有没有真的去查系统。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这时就用：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">for chunk in agent.stream(input_payload, stream_mode="updates"):
+    ...</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">它通常会告诉你类似这样的节点变化：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">model -&gt; tools -&gt; model</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">翻译成人话就是：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">模型先判断要查工具
+工具查完返回结果
+模型再基于结果回答</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这对于后台日志、运维排查、前端进度条都很有用。</p>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-3" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#2563EB" />
+            <stop offset="100%" stop-color="#14B8A6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-3)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-3)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #EFF6FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #2563EB 0%, #14B8A6 100%);box-shadow:0 0 0 1px rgba(37,99,235,0.22), 0 6px 14px rgba(37,99,235,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">第二种：messages，看模型逐段输出</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">messages</code> 更像我们平时理解的“打字机效果”。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">但它不只是文本。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方文档里强调，<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">messages</code> 会流式输出来自图里任意 LLM 节点的 token 和 metadata。也就是说，它也可能包含：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">普通文本块</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">工具调用片段</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">reasoning / thinking 内容块（如果模型和配置支持）</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">当前来自哪个 LangGraph 节点的元信息</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Python 里常见写法是：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">for token, metadata in agent.stream(input_payload, stream_mode="messages"):
+    print(metadata["langgraph_node"])
+    print(token.content_blocks)</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这里有个小提醒：</p>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">不要默认每个 chunk 都是自然语言文本。它也可能是工具调用参数的一小段。</p>
+
+</section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">所以生产里最好先判断 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">content_blocks</code> 的类型，再决定怎么展示。</p>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(147,51,234,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-4" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#9333EA" />
+            <stop offset="100%" stop-color="#F59E0B" />
+        </linearGradient>
+        <radialGradient id="h2-rad-4" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-4)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-4)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #FAF5FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #9333EA 0%, #F59E0B 100%);box-shadow:0 0 0 1px rgba(147,51,234,0.22), 0 6px 14px rgba(147,51,234,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">第三种：custom，让工具自己汇报进度</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这是我觉得最容易被低估的一种。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">custom</code> 不是模型吐出来的内容，而是你在工具内部主动写出来的业务进度。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">比如：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">“正在读取工单”</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">“正在检查退款规则”</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">“正在匹配历史处理记录”</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">“已生成建议草稿”</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">在 Python 里，工具内部可以用：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">from langgraph.config import get_stream_writer
+
+writer = get_stream_writer()
+writer("正在读取工单")</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这非常适合真实系统。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">因为很多时候，用户不关心模型每个 token。他更关心：</p>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><span style="font-weight:bold;color:#625D9C;">系统到底查到哪一步了。</span></p>
+
+</section>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-5" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-5" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-5)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-5)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">多模式一起开：流程和进度都要</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方文档支持一次传多个模式。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Python 中可以这样写：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">for mode, chunk in agent.stream(
+    input_payload,
+    stream_mode=["updates", "custom"],
+):
+    print(mode, chunk)</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这时返回的是 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">(mode, chunk)</code>。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">大白话就是：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">updates</code> 告诉你 Agent 走到哪个节点</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">custom</code> 告诉你业务工具正在干什么</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果你做的是管理后台、客服工作台、内部运维助手，我会更推荐这种组合。</p>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-6" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-6" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-6)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-6)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">和官网内容对齐的一张速查表</span></span></h2>
+<table>
+<thead>
+<tr>
+<th>官方 JS 文档</th>
+<th>Python 对应理解</th>
+<th>用法重点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">streamMode: &quot;updates&quot;</code></td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">stream_mode=&quot;updates&quot;</code></td>
+<td>每个 Agent 步骤后的状态更新</td>
+</tr>
+<tr>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">streamMode: &quot;messages&quot;</code></td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">stream_mode=&quot;messages&quot;</code></td>
+<td>LLM token 与 metadata</td>
+</tr>
+<tr>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">streamMode: &quot;custom&quot;</code></td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">stream_mode=&quot;custom&quot;</code></td>
+<td>工具或节点主动发出的业务事件</td>
+</tr>
+<tr>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">streamMode: [&quot;updates&quot;, &quot;messages&quot;]</code></td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">stream_mode=[&quot;updates&quot;, &quot;messages&quot;]</code></td>
+<td>同时看多种事件</td>
+</tr>
+<tr>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">streamEvents(..., version=&quot;v3&quot;)</code></td>
+<td>更偏事件流和前端投影</td>
+<td>适合复杂 UI 和生产系统</td>
+</tr>
+<tr>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">contentBlocks</code></td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">content_blocks</code></td>
+<td>标准化内容块，可能是 text、tool_call、reasoning 等</td>
+</tr>
+</tbody></table>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这张表够用了。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">先别急着把所有流式能力都塞进项目。第一步只要回答一个问题：</p>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><span style="font-weight:bold;color:#625D9C;">你的用户最需要看到什么进度？</span></p>
+
+</section>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-7" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-7" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-7)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-7)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">一个自己写的业务示例：售后退款助手</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">下面这个例子不照搬官网的天气查询。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">我们写一个更接近企业内部系统的场景：客服同学输入退款工单号，Agent 会：</p>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">查询工单基本信息</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">检查退款规则</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">给出处理建议</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">在工具内部流式输出业务进度</span></li>
+
+</ol>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">我们会同时演示：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">updates</code></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">messages</code></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">custom</code></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">多模式组合</span></li>
+
+</ul>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-8" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#2563EB" />
+            <stop offset="100%" stop-color="#14B8A6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-8" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-8)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-8)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #EFF6FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #2563EB 0%, #14B8A6 100%);box-shadow:0 0 0 1px rgba(37,99,235,0.22), 0 6px 14px rgba(37,99,235,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">完整 Python 代码</span></span></h2>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">运行前建议安装：<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">langchain</code>、<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">langchain-openai</code>、<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">langgraph</code>、<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">python-dotenv</code>。项目根目录已有 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">.env</code> 时，把 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">OPENAI_API_KEY</code> 写进去即可。</p>
+
+</section>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">"""
+LangChain 流式传输完整示例：售后退款助手
+
+这个脚本演示四件事：
+1. stream_mode="updates"：查看 Agent 走到了 model 还是 tools 节点
+2. stream_mode="messages"：查看模型逐段输出的 token / content_blocks
+3. stream_mode="custom"：查看工具内部主动发出的业务进度
+4. stream_mode=["updates", "custom"]：同时观察流程和业务进度
+
+注意：
+- 示例中的数据是内存里的假数据，方便你直接理解逻辑。
+- 真接入业务时，把 REFUND_TICKETS / REFUND_POLICIES 换成数据库或 HTTP API 即可。
+"""
+
+from __future__ import annotations
+
+import os
+from typing import Literal
+
+from dotenv import load_dotenv
+from langchain.agents import create_agent
+from langchain.tools import tool
+from langgraph.config import get_stream_writer
+from pydantic import BaseModel, Field
+
+
+# 读取 .env 中的 OPENAI_API_KEY、MODEL_NAME 等配置。
+load_dotenv()
+
+
+# 这里用内存数据模拟真实工单系统。
+REFUND_TICKETS = {
+    "RF-1001": {
+        "customer": "华东区 A 公司",
+        "amount": 12800,
+        "reason": "重复扣款",
+        "days_since_payment": 3,
+        "risk_level": "low",
+    },
+    "RF-1002": {
+        "customer": "北京 B 公司",
+        "amount": 88000,
+        "reason": "合同终止争议",
+        "days_since_payment": 46,
+        "risk_level": "high",
+    },
+}
+
+REFUND_POLICIES = {
+    "low": "低风险退款：金额小于 20000 且付款 7 天内，可由客服主管审批。",
+    "medium": "中风险退款：需要财务复核，并保留合同与付款凭证。",
+    "high": "高风险退款：必须由法务、财务和业务负责人共同确认。",
+}
+
+
+class RefundTicketInput(BaseModel):
+    """查询退款工单时需要的输入。"""
+
+    ticket_id: str = Field(description="退款工单号，例如 RF-1001")
+    include_policy: bool = Field(
+        default=True,
+        description="是否同时返回对应退款规则",
+    )
+
+
+@tool(args_schema=RefundTicketInput)
+def lookup_refund_ticket(ticket_id: str, include_policy: bool = True) -&gt; str:
+    """查询退款工单，并根据风险等级返回处理规则。"""
+
+    # get_stream_writer 只能在 LangGraph / Agent 执行上下文里使用。
+    # 它发出的内容会出现在 stream_mode="custom" 的输出里。
+    writer = get_stream_writer()
+
+    writer(f"开始读取退款工单：{ticket_id}")
+    ticket = REFUND_TICKETS.get(ticket_id)
+
+    if ticket is None:
+        writer("没有找到对应工单，准备返回空结果")
+        return f"未找到退款工单 {ticket_id}。请确认工单号是否正确。"
+
+    writer("已读取工单基础信息")
+
+    result = [
+        f"工单号：{ticket_id}",
+        f"客户：{ticket['customer']}",
+        f"金额：{ticket['amount']} 元",
+        f"原因：{ticket['reason']}",
+        f"付款距今：{ticket['days_since_payment']} 天",
+        f"风险等级：{ticket['risk_level']}",
+    ]
+
+    if include_policy:
+        writer("正在匹配退款审批规则")
+        policy = REFUND_POLICIES.get(ticket["risk_level"], "未找到匹配规则")
+        result.append(f"审批规则：{policy}")
+        writer("已匹配退款审批规则")
+
+    return "\n".join(result)
+
+
+class SuggestionInput(BaseModel):
+    """生成客服建议时需要的输入。"""
+
+    risk_level: Literal["low", "medium", "high"] = Field(description="退款风险等级")
+    amount: int = Field(description="退款金额，单位为元")
+
+
+@tool(args_schema=SuggestionInput)
+def build_refund_reply_suggestion(risk_level: str, amount: int) -&gt; str:
+    """根据退款风险和金额生成客服处理建议。"""
+
+    writer = get_stream_writer()
+    writer("开始生成客服处理建议")
+
+    if risk_level == "high" or amount &gt;= 50000:
+        writer("识别为高风险或大额退款，需要升级处理")
+        return (
+            "建议回复：该退款涉及较高金额或争议风险，建议先收集合同、付款记录、"
+            "沟通截图，并升级给财务、法务和业务负责人共同确认。"
+        )
+
+    if risk_level == "medium":
+        writer("识别为中风险退款，需要财务复核")
+        return "建议回复：该退款需要财务复核，请客户补充付款凭证和退款原因说明。"
+
+    writer("识别为低风险退款，可走快速审批")
+    return "建议回复：该退款符合快速审批条件，可提交客服主管审批。"
+
+
+def build_agent():
+    """创建一个带工具的退款处理 Agent。"""
+
+    model_name = os.getenv("MODEL_NAME", "openai:gpt-4o-mini")
+
+    return create_agent(
+        model=model_name,
+        tools=[lookup_refund_ticket, build_refund_reply_suggestion],
+        system_prompt=(
+            "你是一个企业售后退款助手。"
+            "回答前必须先查询退款工单；"
+            "如果涉及高风险或大额退款，要提醒升级给财务、法务和业务负责人。"
+            "回复要简洁、稳妥、可执行。"
+        ),
+    )
+
+
+def build_input(ticket_id: str) -&gt; dict:
+    """构造 Agent 输入。"""
+
+    return {
+        "messages": [
+            {
+                "role": "user",
+                "content": f"请帮我处理退款工单 {ticket_id}，给出客服回复建议。",
+            }
+        ]
+    }
+
+
+def demo_updates(agent, ticket_id: str) -&gt; None:
+    """演示 updates：看 Agent 运行步骤。"""
+
+    print("\n=== stream_mode='updates'：查看 Agent 步骤 ===")
+    for chunk in agent.stream(build_input(ticket_id), stream_mode="updates"):
+        # chunk 通常类似：{"model": {...}} 或 {"tools": {...}}
+        for step_name, step_data in chunk.items():
+            print(f"\n[步骤] {step_name}")
+            last_message = step_data["messages"][-1]
+            print(last_message.content_blocks)
+
+
+def demo_messages(agent, ticket_id: str) -&gt; None:
+    """演示 messages：看模型 token 和工具调用片段。"""
+
+    print("\n=== stream_mode='messages'：查看模型输出片段 ===")
+    for token, metadata in agent.stream(build_input(ticket_id), stream_mode="messages"):
+        node_name = metadata.get("langgraph_node")
+        blocks = getattr(token, "content_blocks", [])
+
+        if not blocks:
+            continue
+
+        print(f"\n[节点] {node_name}")
+        for block in blocks:
+            block_type = block.get("type")
+
+            if block_type == "text":
+                print(block.get("text", ""), end="", flush=True)
+            else:
+                # 工具调用片段、reasoning 片段等会走这里。
+                print(f"\n[非文本内容块] {block}")
+
+    print()
+
+
+def demo_custom(agent, ticket_id: str) -&gt; None:
+    """演示 custom：看工具内部主动发出的业务进度。"""
+
+    print("\n=== stream_mode='custom'：查看业务进度 ===")
+    for chunk in agent.stream(build_input(ticket_id), stream_mode="custom"):
+        print(f"[业务进度] {chunk}")
+
+
+def demo_multiple_modes(agent, ticket_id: str) -&gt; None:
+    """演示多模式：同时查看 Agent 步骤和业务进度。"""
+
+    print("\n=== stream_mode=['updates', 'custom']：同时查看流程和业务进度 ===")
+    for mode, chunk in agent.stream(
+        build_input(ticket_id),
+        stream_mode=["updates", "custom"],
+    ):
+        if mode == "custom":
+            print(f"[custom] {chunk}")
+        elif mode == "updates":
+            print(f"[updates] {list(chunk.keys())}")
+
+
+if __name__ == "__main__":
+    refund_agent = build_agent()
+
+    # 可以换成 RF-1001 看低风险退款，也可以用 RF-1002 看高风险退款。
+    target_ticket_id = "RF-1002"
+
+    demo_updates(refund_agent, target_ticket_id)
+    demo_messages(refund_agent, target_ticket_id)
+    demo_custom(refund_agent, target_ticket_id)
+    demo_multiple_modes(refund_agent, target_ticket_id)</code></pre></section>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(147,51,234,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-9" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#9333EA" />
+            <stop offset="100%" stop-color="#F59E0B" />
+        </linearGradient>
+        <radialGradient id="h2-rad-9" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-9)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-9)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #FAF5FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #9333EA 0%, #F59E0B 100%);box-shadow:0 0 0 1px rgba(147,51,234,0.22), 0 6px 14px rgba(147,51,234,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">这段代码最值得看的几个点</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">第一，<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">updates</code> 看的是 Agent 运行节点。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">它适合回答：</p>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Agent 到底有没有调用工具？卡在哪一步？</p>
+
+</section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">第二，<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">messages</code> 看的是模型输出片段。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">它适合回答：</p>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">最终答案能不能一边生成一边展示？工具调用参数是不是也在流里出现？</p>
+
+</section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">第三，<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">custom</code> 看的是工具主动发出的业务事件。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">它适合回答：</p>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">工具内部执行到哪了？数据库查完了吗？审批规则匹配了吗？</p>
+
+</section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这三个问题，其实就是大模型应用从 demo 走到产品时最常见的三个问题。</p>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-10" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-10" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-10)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-10)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">什么时候该用哪种模式？</span></span></h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>推荐模式</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>聊天窗口逐字展示</td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">messages</code></td>
+<td>用户需要看到文字逐步出现</td>
+</tr>
+<tr>
+<td>后台任务进度条</td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">updates</code> + <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">custom</code></td>
+<td>既要流程节点，也要业务进度</td>
+</tr>
+<tr>
+<td>调试 Agent 工具调用</td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">updates</code></td>
+<td>看模型、工具、模型的往返过程</td>
+</tr>
+<tr>
+<td>展示工具内部进度</td>
+<td><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">custom</code></td>
+<td>进度来自工具，不来自模型</td>
+</tr>
+<tr>
+<td>复杂前端应用</td>
+<td>Event Streaming</td>
+<td>更适合 typed projections 和 UI 状态管理</td>
+</tr>
+</tbody></table>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果你只做一个简单聊天框，<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">messages</code> 就够。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果你做企业内部助手，我更建议从 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">updates + custom</code> 开始。</p>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-11" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-11" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-11)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-11)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">常见坑：别把所有流都当文本处理</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">很多同学第一次接 streaming，最容易写出这样的代码：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">for token, metadata in agent.stream(payload, stream_mode="messages"):
+    print(token.content)</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这能跑，但不够稳。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">因为 Agent 场景里，流出来的内容不一定都是普通文本，可能还有工具调用 chunk。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">更稳的做法是看 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">content_blocks</code>：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">type == &quot;text&quot;</code>：展示给用户</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">type == &quot;tool_call_chunk&quot;</code>：可以展示为“正在准备调用工具”</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">type == &quot;reasoning&quot;</code>：如果产品允许，再考虑展示</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">其他类型：先记录日志，不要直接拼到正文里</span></li>
+
+</ul>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><span style="font-weight:bold;color:#625D9C;">流式输出不是字符串拼接问题，而是事件分流问题。</span></p>
+
+</section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这句话很重要。</p>
+<hr>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-12" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-12" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-12)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-12)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">最后总结</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">LangChain 的流式传输，真正有价值的地方不是“让字一个个冒出来”。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">它让 Agent 的运行过程变得可见。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果用户只是等一个答案，<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">invoke</code> 也许够用。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">但只要进入真实业务场景，用户就会在意：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">系统有没有开始处理</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">有没有查真实数据</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">查到了哪一步</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">是模型在生成，还是工具在执行</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">中间有没有触发高风险动作</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这时 streaming 就不再是体验优化，而是产品基本功。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">我个人会这样记：</p>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><span style="font-weight:bold;color:#625D9C;">messages 管文字，updates 管步骤，custom 管业务进度。</span></p>
+
+</section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">三者配好，一个 Agent 才不再像黑盒。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">它开始有了工作时的“呼吸感”。</p>
+
+    
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:32px 0 12px 0;padding:0;">
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># LangChain</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Streaming</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Agent</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Python</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># 微信公众号</span>
+</section>
+
+  </div>
+</div>
+</body>
+</html>

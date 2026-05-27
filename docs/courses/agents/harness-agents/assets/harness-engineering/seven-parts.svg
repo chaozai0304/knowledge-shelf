@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="760" viewBox="0 0 900 760">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F5F7FF"/></linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5DB2E2"/><stop offset="1" stop-color="#625D9C"/></linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#10213E" flood-opacity="0.12"/></filter>
+    <style>
+      .title{font:800 30px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#10213E}.sub{font:500 15px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#64748B}.h{font:800 19px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#10213E}.p{font:500 14px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#64748B}.n{font:800 18px Arial,sans-serif;fill:#fff}
+    </style>
+  </defs>
+  <rect width="900" height="760" rx="30" fill="url(#bg)"/>
+  <text x="50" y="58" class="title">驾驭工程的 7 个组成部分</text>
+  <text x="50" y="88" class="sub">从“把任务交给 Agent”到“让 Agent 在工程体系里稳定工作”</text>
+
+  <g filter="url(#shadow)">
+    <rect x="50" y="126" width="370" height="112" rx="22" fill="#fff"/><circle cx="88" cy="164" r="20" fill="url(#accent)"/><text x="88" y="171" text-anchor="middle" class="n">1</text><text x="124" y="158" class="h">目标与任务切分</text><text x="124" y="187" class="p">把大任务拆成可交付、可验证的小任务</text><text x="124" y="211" class="p">避免一个会话里“画整只猫头鹰”</text>
+    <rect x="480" y="126" width="370" height="112" rx="22" fill="#fff"/><circle cx="518" cy="164" r="20" fill="url(#accent)"/><text x="518" y="171" text-anchor="middle" class="n">2</text><text x="554" y="158" class="h">上下文工程</text><text x="554" y="187" class="p">给 Agent 正确、干净、足够少的上下文</text><text x="554" y="211" class="p">项目结构、接口约束、历史决策都要可见</text>
+    <rect x="50" y="270" width="370" height="112" rx="22" fill="#fff"/><circle cx="88" cy="308" r="20" fill="url(#accent)"/><text x="88" y="315" text-anchor="middle" class="n">3</text><text x="124" y="302" class="h">Agent 指南与隐式提示</text><text x="124" y="331" class="p">用 AGENTS.md 等文件沉淀项目规矩</text><text x="124" y="355" class="p">把“别再这样做”写成长期说明</text>
+    <rect x="480" y="270" width="370" height="112" rx="22" fill="#fff"/><circle cx="518" cy="308" r="20" fill="url(#accent)"/><text x="518" y="315" text-anchor="middle" class="n">4</text><text x="554" y="302" class="h">工具工程</text><text x="554" y="331" class="p">提供 Agent 能调用的真实工具</text><text x="554" y="355" class="p">测试、截图、日志摘要、API 校验</text>
+    <rect x="50" y="414" width="370" height="112" rx="22" fill="#fff"/><circle cx="88" cy="452" r="20" fill="url(#accent)"/><text x="88" y="459" text-anchor="middle" class="n">5</text><text x="124" y="446" class="h">验证与完成标准</text><text x="124" y="475" class="p">明确什么叫做“完成”</text><text x="124" y="499" class="p">让 Agent 用证据证明，而不是口头宣布</text>
+    <rect x="480" y="414" width="370" height="112" rx="22" fill="#fff"/><circle cx="518" cy="452" r="20" fill="url(#accent)"/><text x="518" y="459" text-anchor="middle" class="n">6</text><text x="554" y="446" class="h">权限、审批与审计</text><text x="554" y="475" class="p">限定 Agent 能看什么、能改什么</text><text x="554" y="499" class="p">副作用动作要可审批、可追踪</text>
+    <rect x="178" y="558" width="544" height="128" rx="24" fill="#fff"/><circle cx="230" cy="606" r="24" fill="url(#accent)"/><text x="230" y="614" text-anchor="middle" class="n">7</text><text x="276" y="598" class="h">错误复盘与机制化沉淀</text><text x="276" y="628" class="p">每次 Agent 犯错，都问：缺哪条说明、哪段工具、哪道验证？</text><text x="276" y="653" class="p">目标不是这次骂对，而是下次不用再骂。</text>
+  </g>
+</svg>

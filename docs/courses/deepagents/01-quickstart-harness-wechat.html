@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+  <meta charset="utf-8">
+  <title>Deep Agents 第一讲：从 Harness 心智模型开始，理解长任务智能体</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #ffffff; color: #10213E; margin: 0; padding: 20px; font-family: MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif; }
+    #page-content { max-width: 667px; margin: 0 auto; }
+    .rich_media_title { font-size: 24px; font-weight: bold; line-height: 1.4; color: #10213E; margin-bottom: 16px; }
+    .rich_media_meta_list { color: #64748B; font-size: 14px; margin-bottom: 32px; }
+    .rich_media_meta_text { margin-right: 16px; }
+    table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+    th, td { padding: 12px 10px; border: 1px solid #F5F5F6; text-align: left; vertical-align: top; }
+    thead th { background-color: #10213E; color: #ffffff; font-weight: bold; }
+    tbody tr:nth-child(even) { background-color: #F5F5F6; }
+  </style>
+</head>
+<body>
+<div id="page-content">
+  
+  <h1 class="rich_media_title">Deep Agents 第一讲：从 Harness 心智模型开始，理解长任务智能体</h1>
+  <div class="rich_media_meta_list">
+    <span class="rich_media_meta_text">chao</span>
+    <span class="rich_media_meta_text">2026-05-21</span>
+  </div>
+  <div id="js_content">
+    
+<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5MDAiIGhlaWdodD0iMzYwIiB2aWV3Qm94PSIwIDAgOTAwIDM2MCI+CiAgPHJlY3Qgd2lkdGg9IjkwMCIgaGVpZ2h0PSIzNjAiIHJ4PSIyOCIgZmlsbD0iI0Y2RjhGRiIvPgogIDx0ZXh0IHg9IjQ1MCIgeT0iNDQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMjgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzEwMjEzRSI+RGVlcCBBZ2VudHMgSGFybmVzcyDlv4PmmbrmqKHlnos8L3RleHQ+CiAgPGcgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmaWxsPSIjMTAyMTNFIj4KICAgIDxyZWN0IHg9IjU1IiB5PSIxMzAiIHdpZHRoPSIxMzAiIGhlaWdodD0iODAiIHJ4PSIxNiIgZmlsbD0iI0U4RjBGRiIgc3Ryb2tlPSIjMkY2QkZGIi8+CiAgICA8dGV4dCB4PSIxMjAiIHk9IjE2NCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9IjcwMCI+55So5oi35Lu75YqhPC90ZXh0PgogICAgPHRleHQgeD0iMTIwIiB5PSIxOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTMiPumVv+S4iuS4i+aWh+ebruaghzwvdGV4dD4KICAgIDxyZWN0IHg9IjI1MCIgeT0iODUiIHdpZHRoPSI0MDAiIGhlaWdodD0iMTcwIiByeD0iMjQiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzYyNUQ5QyIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgICA8dGV4dCB4PSI0NTAiIHk9IjEyMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzYyNUQ5QyI+SGFybmVzczwvdGV4dD4KICAgIDxyZWN0IHg9IjI4NSIgeT0iMTQ1IiB3aWR0aD0iOTAiIGhlaWdodD0iNDQiIHJ4PSIxMiIgZmlsbD0iI0Y1RjVGNiIvPjx0ZXh0IHg9IjMzMCIgeT0iMTczIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7op4TliJI8L3RleHQ+CiAgICA8cmVjdCB4PSI0MDUiIHk9IjE0NSIgd2lkdGg9IjkwIiBoZWlnaHQ9IjQ0IiByeD0iMTIiIGZpbGw9IiNGNUY1RjYiLz48dGV4dCB4PSI0NTAiIHk9IjE3MyIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5paH5Lu257O757ufPC90ZXh0PgogICAgPHJlY3QgeD0iNTI1IiB5PSIxNDUiIHdpZHRoPSI5MCIgaGVpZ2h0PSI0NCIgcng9IjEyIiBmaWxsPSIjRjVGNUY2Ii8+PHRleHQgeD0iNTcwIiB5PSIxNzMiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuWtkOaZuuiDveS9kzwvdGV4dD4KICAgIDxyZWN0IHg9IjM0NSIgeT0iMjAyIiB3aWR0aD0iOTAiIGhlaWdodD0iMzYiIHJ4PSIxMCIgZmlsbD0iI0VFRjJGRiIvPjx0ZXh0IHg9IjM5MCIgeT0iMjI2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjE0Ij7ljovnvKk8L3RleHQ+CiAgICA8cmVjdCB4PSI0NjUiIHk9IjIwMiIgd2lkdGg9IjkwIiBoZWlnaHQ9IjM2IiByeD0iMTAiIGZpbGw9IiNFRUYyRkYiLz48dGV4dCB4PSI1MTAiIHk9IjIyNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNCI+6K6w5b+GPC90ZXh0PgogICAgPHJlY3QgeD0iNzE1IiB5PSIxMDAiIHdpZHRoPSIxMzAiIGhlaWdodD0iNjQiIHJ4PSIxNiIgZmlsbD0iI0VBRkJGMyIgc3Ryb2tlPSIjMkZBNjZBIi8+CiAgICA8dGV4dCB4PSI3ODAiIHk9IjEzNyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9IjcwMCI+5bel5YW36LCD55SoPC90ZXh0PgogICAgPHJlY3QgeD0iNzE1IiB5PSIxOTUiIHdpZHRoPSIxMzAiIGhlaWdodD0iNjQiIHJ4PSIxNiIgZmlsbD0iI0ZGRjRFOCIgc3Ryb2tlPSIjRkY5RjJGIi8+CiAgICA8dGV4dCB4PSI3ODAiIHk9IjIzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9IjcwMCI+5pyA57uI5oql5ZGKPC90ZXh0PgogIDwvZz4KICA8ZyBzdHJva2U9IiMyRjZCRkYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiPgogICAgPHBhdGggZD0iTTE4NSAxNzAgSDI1MCIvPjxwYXRoIGQ9Ik02NTAgMTMyIEg3MTUiLz48cGF0aCBkPSJNNjUwIDIyNyBINzE1Ii8+CiAgPC9nPgogIDxkZWZzPjxtYXJrZXIgaWQ9ImFycm93IiBtYXJrZXJXaWR0aD0iMTAiIG1hcmtlckhlaWdodD0iMTAiIHJlZlg9IjgiIHJlZlk9IjMiIG9yaWVudD0iYXV0byI+PHBhdGggZD0iTTAsMCBMMCw2IEw5LDMgeiIgZmlsbD0iIzJGNkJGRiIvPjwvbWFya2VyPjwvZGVmcz4KPC9zdmc+Cg==" alt="Deep Agents Harness 心智模型" style="max-width:100%;height:auto;border-radius:8px;display:block;margin:12px 0;box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-0" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-0" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-0)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-0)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">为什么 Deep Agents 不是“再封装一个 Agent”</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果只是做一个能调用工具的聊天机器人，普通 LangChain Agent 已经够用。但一旦任务变长，问题会立刻冒出来：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">任务需要先计划，再分阶段执行。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">中间资料越来越多，上下文窗口放不下。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">有些工作应该交给专家子智能体。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">生成的草稿、证据、报告需要有文件系统承载。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">危险操作需要人工审批。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">生产环境要考虑用户、线程、记忆、权限和观测。</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Deep Agents 的价值就在这里：它不是只帮你“调模型”，而是把长任务 Agent 常见的工程脚手架打包成一套 Harness。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">一句大白话：<span style="font-weight:bold;color:#625D9C;">Deep Agents 是 LangGraph 之上的“长任务智能体套件”，重点解决规划、上下文、文件、子智能体和生产化。</span></p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-1" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-1)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-1)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">第一讲先看一个资料研究员</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">代码已保存到：<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">output/courses/deepagents/code/01_quickstart_research_agent.py</code>。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这个例子严格对齐官方 quickstart 的主线：<span style="font-weight:bold;color:#625D9C;">安装 Deep Agents 和 Tavily，创建 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">internet_search</code> 工具，再用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">create_deep_agent</code> 组装一个研究员 Agent</span>。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">为了保证可跑、可学、可扩展，我在官方示例基础上做了两个增强：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">优先使用 Tavily 做真实互联网搜索。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">如果暂时没有 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">TAVILY_API_KEY</code>，自动退回本地迷你知识库，方便先理解流程。</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这个例子把 Agent 设定成资料研究员：</p>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">用户提出研究问题。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">Agent 先规划要研究的方向。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">调用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">internet_search</code> 检索资料；有 Tavily key 就联网搜索，没有 key 就本地演示。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">把证据整理成结论和学习路线。</span></li>
+
+</ol>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-2" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-2)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-2)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">官方 quickstart 完整流程</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方快速入门包含 5 个步骤，少任何一个都容易让新手卡住。</p>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #5B7CFF33);">
+    <defs>
+        <linearGradient id="h3-grad-0" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#5B7CFF" />
+            <stop offset="100%" stop-color="#69EACB" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-0)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">Step 0：前置条件</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #5B7CFF 0%, #69EACB 100%);box-shadow:0 3px 10px #5B7CFF22;"></span></span></h3>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Deep Agents 需要一个<span style="font-weight:bold;color:#625D9C;">支持 tool calling 的模型</span>。也就是说，模型不只是会聊天，还要能稳定地产生“我要调用哪个工具、参数是什么”的结构化请求。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">常见模型写法是 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">provider:model</code>：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">google_genai:gemini-3.5-flash
+openai:gpt-4o-mini
+anthropic:claude-sonnet-4-6</code></pre></section>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #A855F733);">
+    <defs>
+        <linearGradient id="h3-grad-1" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#A855F7" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-1)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">Step 1：安装依赖</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #A855F7 0%, #F472B6 100%);box-shadow:0 3px 10px #A855F722;"></span></span></h3>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方 quickstart 的安装命令是：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">pip install deepagents tavily-python</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">本课程为了覆盖后续章节，还把 LangGraph、LangChain、QuickJS 解释器等依赖放进了 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">requirements.txt</code>：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">cd /Users/chao/Desktop/分享文档库/output/courses/deepagents/code
+pip install -r requirements.txt</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">其中最容易漏掉的是 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">tavily-python</code>。如果少了它，官方搜索工具示例就跑不起来。</p>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #0891B233);">
+    <defs>
+        <linearGradient id="h3-grad-2" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0891B2" />
+            <stop offset="100%" stop-color="#34D399" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-2)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">Step 2：配置 API keys</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #0891B2 0%, #34D399 100%);box-shadow:0 3px 10px #0891B222;"></span></span></h3>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方示例使用 Gemini 和 Tavily：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">export GOOGLE_API_KEY="your-api-key"
+export TAVILY_API_KEY="your-tavily-api-key"</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">本课程默认用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">.env</code>，更适合本地反复学习：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">DEEPAGENTS_MODEL=openai:gpt-4o-mini
+OPENAI_API_KEY=你的模型网关 key
+OPENAI_BASE_URL=https://你的模型网关/v1
+TAVILY_API_KEY=你的 tavily key
+RUN_AGENT=true</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果你改用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">google_genai:*</code>，再填写：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">GOOGLE_API_KEY=你的 google key</code></pre></section>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #4F46E533);">
+    <defs>
+        <linearGradient id="h3-grad-3" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#4F46E5" />
+            <stop offset="100%" stop-color="#22D3EE" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-3)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">Step 3：创建搜索工具</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #4F46E5 0%, #22D3EE 100%);box-shadow:0 3px 10px #4F46E522;"></span></span></h3>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方示例中的工具叫 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">internet_search</code>，核心代码是：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">from tavily import TavilyClient
+
+tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
+
+def internet_search(query: str, max_results: int = 5, topic: str = "general"):
+    return tavily_client.search(query, max_results=max_results, topic=topic)</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">课程代码做了更适合新手的版本：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">有 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">TAVILY_API_KEY</code>：真实调用 Tavily。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">没有 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">TAVILY_API_KEY</code>：回退到本地知识库。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">返回结构保持一致，方便理解工具结果如何进入 Agent。</span></li>
+
+</ul>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #5B7CFF33);">
+    <defs>
+        <linearGradient id="h3-grad-4" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#5B7CFF" />
+            <stop offset="100%" stop-color="#69EACB" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-4)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">Step 4：创建 deep agent</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #5B7CFF 0%, #69EACB 100%);box-shadow:0 3px 10px #5B7CFF22;"></span></span></h3>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">核心代码结构如下：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">from deepagents import create_deep_agent
+
+agent = create_deep_agent(
+    model="openai:gpt-4o-mini",
+    tools=[internet_search],
+    system_prompt=RESEARCH_INSTRUCTIONS,
+)</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">看起来很短，但 Deep Agents 会自动加入很多 Harness 能力，比如待办列表、虚拟文件系统、上下文管理和默认的通用子智能体。</p>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #A855F733);">
+    <defs>
+        <linearGradient id="h3-grad-5" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#A855F7" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-5)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">Step 5：运行 agent</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #A855F7 0%, #F472B6 100%);box-shadow:0 3px 10px #A855F722;"></span></span></h3>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方运行方式是：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">result = agent.invoke({
+    "messages": [{"role": "user", "content": "What is langgraph?"}]
+})
+
+print(result["messages"][-1].content)</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">本课程对应命令：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">python 01_quickstart_research_agent.py</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">运行时 Deep Agents 会自动做几件事：</p>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">用内置 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">write_todos</code> 拆解研究计划。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">调用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">internet_search</code> 搜索资料。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">write_file</code> / <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">read_file</code> 等虚拟文件系统工具卸载大段资料。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">必要时派发默认 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">general-purpose</code> 子智能体。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">汇总证据，生成最终报告。</span></li>
+
+</ol>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-3" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#2563EB" />
+            <stop offset="100%" stop-color="#14B8A6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-3)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-3)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #EFF6FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #2563EB 0%, #14B8A6 100%);box-shadow:0 0 0 1px rgba(37,99,235,0.22), 0 6px 14px rgba(37,99,235,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">Harness 到底在帮你做什么</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">可以把 Harness 想成一个“智能体操作系统”。模型负责推理，Harness 负责让推理过程可控。</p>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>作用</th>
+<th>大白话</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Planning</td>
+<td>维护任务计划</td>
+<td>先把活拆开，不要想到哪做到哪</td>
+</tr>
+<tr>
+<td>Filesystem</td>
+<td>读写临时文件</td>
+<td>草稿、证据、报告不要全塞进 prompt</td>
+</tr>
+<tr>
+<td>Subagents</td>
+<td>派发专家任务</td>
+<td>主 Agent 当项目经理，子 Agent 当专家</td>
+</tr>
+<tr>
+<td>Context management</td>
+<td>压缩和隔离上下文</td>
+<td>避免长任务把上下文撑爆</td>
+</tr>
+<tr>
+<td>HITL</td>
+<td>人工审批</td>
+<td>删文件、发邮件、发布报告前先让人点头</td>
+</tr>
+<tr>
+<td>Memory / Skills</td>
+<td>长期知识和按需能力</td>
+<td>该长期记住的记住，该按需加载的按需加载</td>
+</tr>
+</tbody></table>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方文档把这些能力称为 Harness capabilities。它的关键不是“让模型更玄学”，而是把长任务中必需的工程能力做成默认脚手架。</p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(147,51,234,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-4" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#9333EA" />
+            <stop offset="100%" stop-color="#F59E0B" />
+        </linearGradient>
+        <radialGradient id="h2-rad-4" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-4)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-4)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #FAF5FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #9333EA 0%, #F59E0B 100%);box-shadow:0 0 0 1px rgba(147,51,234,0.22), 0 6px 14px rgba(147,51,234,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">和 LangGraph 的关系</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">Deep Agents 底层依赖 LangGraph。可以这样理解：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">LangGraph 解决“执行过程是一张图”。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">Deep Agents 解决“长任务 Agent 常用图怎么搭”。</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">LangGraph 更像基础设施；Deep Agents 更像带默认配置的工程模板。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">如果你要完全控制节点、边、状态和中断，就直接写 LangGraph；如果你要快速做一个能规划、能读写文件、能调子智能体、能上线的长任务 Agent，Deep Agents 更顺手。</p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-5" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-5" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-5)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-5)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">官方 quickstart 的关键点</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方快速入门里的典型写法是：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">agent = create_deep_agent(
+    model="google_genai:gemini-3.5-flash",
+    tools=[internet_search],
+    system_prompt=research_instructions,
+)
+
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "What is langgraph?"}]
+})</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这里有五个重点：</p>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">model</code> 可以用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">provider:model</code> 字符串。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">模型必须支持 tool calling。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">tools</code> 是 Agent 接触外部世界的入口，quickstart 用的是 Tavily 搜索。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">system_prompt</code> 不只是角色设定，更是 Harness 行为约束的一部分。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">Deep Agents 会自动使用 planning、filesystem、subagents 和 context management。</span></li>
+
+</ol>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-6" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-6" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-6)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-6)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">Streaming：快速入门后必须知道的观察方式</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方 quickstart 后面还提到 streaming。长任务如果没有流式输出，用户会觉得系统像卡住了。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">最小写法：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">for chunk in agent.stream(
+    {"messages": [{"role": "user", "content": "Research LangGraph"}]},
+    stream_mode="updates",
+    subgraphs=True,
+    version="v2",
+):
+    print(chunk)</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这能看到主 Agent 和子智能体的执行进度。第五讲会专门讲 streaming 和 event streaming。</p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-7" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-7" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-7)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-7)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">本讲示例为什么默认不直接调用模型</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">课程代码默认 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">RUN_AGENT=false</code>。这样做是为了让你先安全检查结构，不会因为 key、模型网关或额度问题卡在第一步。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">要真实运行时，进入代码目录：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">cd /Users/chao/Desktop/分享文档库/output/courses/deepagents/code
+cp .env.example .env</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">然后填写：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">DEEPAGENTS_MODEL=openai:gpt-4o-mini
+OPENAI_API_KEY=你的 key
+OPENAI_BASE_URL=https://你的模型网关/v1
+TAVILY_API_KEY=你的 Tavily key
+RUN_AGENT=true</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">再执行：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">python 01_quickstart_research_agent.py</code></pre></section>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-8" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#2563EB" />
+            <stop offset="100%" stop-color="#14B8A6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-8" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-8)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-8)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #EFF6FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #2563EB 0%, #14B8A6 100%);box-shadow:0 0 0 1px rgba(37,99,235,0.22), 0 6px 14px rgba(37,99,235,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">如果搜索成功但模型调用 502</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">你刚开始跑真实网关时，最常见的坑是：Tavily 搜索已经成功，但模型调用报 502。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">判断方式很简单：如果报错栈里出现 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">responses.create</code>，说明当前 SDK 可能走了 OpenAI Responses API。很多公司内部网关、LiteLLM、One API 只支持 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">/chat/completions</code>，不支持 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">/responses</code>。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">本课程代码已经默认处理：</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">DEEPAGENTS_USE_RESPONSES_API=false</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">并且在 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">common.py</code> 里显式创建 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">ChatOpenAI</code>，让 OpenAI 兼容网关走 Chat Completions。还额外做了两件事：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">load_dotenv(..., override=True)</code>：防止终端里残留的旧 key 覆盖 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">.env</code>。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">httpx.Client(trust_env=False)</code>：防止系统代理影响内网模型网关。</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">大白话：<span style="font-weight:bold;color:#625D9C;">Tavily 成功只能说明搜索服务没问题；模型 502 要看模型网关、模型名、接口模式和网络代理。</span></p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(147,51,234,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-9" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#9333EA" />
+            <stop offset="100%" stop-color="#F59E0B" />
+        </linearGradient>
+        <radialGradient id="h2-rad-9" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-9)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-9)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #FAF5FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #9333EA 0%, #F59E0B 100%);box-shadow:0 0 0 1px rgba(147,51,234,0.22), 0 6px 14px rgba(147,51,234,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">第一讲要记住的 5 句话</span></span></h2>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">Deep Agents 面向长任务，不只是聊天。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">Harness 是长任务 Agent 的工程脚手架。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">LangGraph 是底座，Deep Agents 是默认组装好的 Agent 形态。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">文件系统和子智能体是 Deep Agents 的核心体验。</span></span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">先跑结构，再接真实模型，是学习这类框架最稳的路径。</span></span></li>
+
+</ol>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-10" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-10" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-10)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-10)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">下一讲讲什么</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">下一讲进入定制：模型怎么换、工具怎么挂、提示词怎么组装、结构化输出和子智能体怎么配置。</p>
+
+    
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:32px 0 12px 0;padding:0;">
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Deep Agents</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># AI Agent</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># LangGraph</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># 快速入门</span>
+</section>
+
+  </div>
+</div>
+</body>
+</html>

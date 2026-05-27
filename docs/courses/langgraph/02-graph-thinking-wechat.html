@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+  <meta charset="utf-8">
+  <title>LangGraph 第二讲：Graph API 与用图思考，把 Agent 拆成可控流程</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #ffffff; color: #10213E; margin: 0; padding: 20px; font-family: MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif; }
+    #page-content { max-width: 667px; margin: 0 auto; }
+    .rich_media_title { font-size: 24px; font-weight: bold; line-height: 1.4; color: #10213E; margin-bottom: 16px; }
+    .rich_media_meta_list { color: #64748B; font-size: 14px; margin-bottom: 32px; }
+    .rich_media_meta_text { margin-right: 16px; }
+    table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+    th, td { padding: 12px 10px; border: 1px solid #F5F5F6; text-align: left; vertical-align: top; }
+    thead th { background-color: #10213E; color: #ffffff; font-weight: bold; }
+    tbody tr:nth-child(even) { background-color: #F5F5F6; }
+  </style>
+</head>
+<body>
+<div id="page-content">
+  
+  <h1 class="rich_media_title">LangGraph 第二讲：Graph API 与用图思考，把 Agent 拆成可控流程</h1>
+  <div class="rich_media_meta_list">
+    <span class="rich_media_meta_text">chao</span>
+    <span class="rich_media_meta_text">2026-05-15</span>
+  </div>
+  <div id="js_content">
+    
+<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjU2MCIgdmlld0JveD0iMCAwIDEyMDAgNTYwIj4KICA8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB4Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iIzZFNUJGRiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzQ1QzdGRiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPgogIDxyZWN0IHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjU2MCIgcng9IjM2IiBmaWxsPSIjRkZGRkZGIi8+CiAgPHJlY3QgeD0iNDAiIHk9IjQwIiB3aWR0aD0iMTEyMCIgaGVpZ2h0PSI0ODAiIHJ4PSIzMCIgZmlsbD0iI0Y1RjVGNiIvPgogIDx0ZXh0IHg9IjgwIiB5PSIxMDAiIGZvbnQtc2l6ZT0iMzQiIGZvbnQtZmFtaWx5PSJQaW5nRmFuZyBTQyxBcmlhbCIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzEwMjEzRSI+TGFuZ0dyYXBoIOeahOS4ieS7tuWllzwvdGV4dD4KICA8ZyBmb250LWZhbWlseT0iUGluZ0ZhbmcgU0MsQXJpYWwiPgogICAgPGNpcmNsZSBjeD0iMjQwIiBjeT0iMzAwIiByPSIxMDUiIGZpbGw9InVybCgjZykiIG9wYWNpdHk9IjAuOTUiLz48dGV4dCB4PSIxOTYiIHk9IjI5MiIgZm9udC1zaXplPSIyOCIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iI2ZmZiI+U3RhdGU8L3RleHQ+PHRleHQgeD0iMTU0IiB5PSIzMzAiIGZvbnQtc2l6ZT0iMTciIGZpbGw9IiNmZmYiPuWFseS6q+Wwj+acrOWtkDwvdGV4dD4KICAgIDxjaXJjbGUgY3g9IjYwMCIgY3k9IjMwMCIgcj0iMTA1IiBmaWxsPSIjMTAyMTNFIiBvcGFjaXR5PSIwLjk1Ii8+PHRleHQgeD0iNTU4IiB5PSIyOTIiIGZvbnQtc2l6ZT0iMjgiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiNmZmYiPk5vZGU8L3RleHQ+PHRleHQgeD0iNTE0IiB5PSIzMzAiIGZvbnQtc2l6ZT0iMTciIGZpbGw9IiNmZmYiPuecn+ato+W5sua0u+eahOWHveaVsDwvdGV4dD4KICAgIDxjaXJjbGUgY3g9Ijk2MCIgY3k9IjMwMCIgcj0iMTA1IiBmaWxsPSIjNjI1RDlDIiBvcGFjaXR5PSIwLjk1Ii8+PHRleHQgeD0iOTIyIiB5PSIyOTIiIGZvbnQtc2l6ZT0iMjgiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiNmZmYiPkVkZ2U8L3RleHQ+PHRleHQgeD0iODc0IiB5PSIzMzAiIGZvbnQtc2l6ZT0iMTciIGZpbGw9IiNmZmYiPuWGs+WumuS4i+S4gOatpeWOu+WTqjwvdGV4dD4KICA8L2c+CiAgPGcgc3Ryb2tlPSIjNURCMkUyIiBzdHJva2Utd2lkdGg9IjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTM1MCAzMDBINDkwIi8+PHBhdGggZD0iTTcxMCAzMDBIODUwIi8+PC9nPgogIDx0ZXh0IHg9IjM5NSIgeT0iMjY4IiBmb250LXNpemU9IjE4IiBmb250LWZhbWlseT0iUGluZ0ZhbmcgU0MsQXJpYWwiIGZpbGw9IiM2NDc0OEIiPuivuy/lhpk8L3RleHQ+PHRleHQgeD0iNzU1IiB5PSIyNjgiIGZvbnQtc2l6ZT0iMTgiIGZvbnQtZmFtaWx5PSJQaW5nRmFuZyBTQyxBcmlhbCIgZmlsbD0iIzY0NzQ4QiI+6Lev55SxPC90ZXh0Pgo8L3N2Zz4K" alt="LangGraph 三件套" style="max-width:100%;height:auto;border-radius:8px;display:block;margin:12px 0;box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-0" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-0" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-0)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-0)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">从“写一段 Agent 代码”到“设计一张执行图”</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">很多人第一次写 Agent，会把所有逻辑塞进一个函数里：分类、检索、调用工具、人工审批、发送消息，全在一起。短 Demo 可以跑，真实业务很快会变成一团毛线。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">LangGraph 的思路是反过来的：</p>
+
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:20px 0;padding:16px;background-color:#F5F5F6;border-left:4px solid #625D9C;border-radius:8px;color:#64748B;">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">先把流程拆成离散步骤，再用状态把步骤串起来，最后用边定义执行方向。</p>
+
+</section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">官方 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">thinking-in-langgraph</code> 用客服邮件 Agent 讲这个过程：读邮件、分类、查文档、创建 bug、人工审核、草拟回复、发送回复。它不是让我们记某个 API，而是训练一种思考方式。</p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-1" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-1)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-1)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">Graph API 的三个基础概念</span></span></h2>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #5B7CFF33);">
+    <defs>
+        <linearGradient id="h3-grad-0" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#5B7CFF" />
+            <stop offset="100%" stop-color="#69EACB" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-0)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">1. State：流程的共享小本子</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #5B7CFF 0%, #69EACB 100%);box-shadow:0 3px 10px #5B7CFF22;"></span></span></h3>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">State 保存每个节点都可能需要的数据。它不是“所有变量都往里塞”，而是保存跨步骤需要复用、恢复、审计的数据。</p>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">应该放进 State 的内容：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">原始输入，比如用户邮件、消息、工单内容。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">分类结果、检索结果、工具返回结果。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">草稿、最终回答、审批结果。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">需要跨节点保留的执行元数据。</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">不建议放进 State 的内容：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">可以随时从其他字段推导出来的临时字符串。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">Prompt 模板。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">不可序列化对象，比如打开的文件句柄、数据库连接、函数对象。</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">大白话：<span style="font-weight:bold;color:#625D9C;">State 存事实，不存“临时拼出来的话”。Prompt 在节点里按需组装。</span></p>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #A855F733);">
+    <defs>
+        <linearGradient id="h3-grad-1" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#A855F7" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-1)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">2. Node：真正干活的函数</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #A855F7 0%, #F472B6 100%);box-shadow:0 3px 10px #A855F722;"></span></span></h3>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">节点可以是：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">LLM 调用。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">数据库查询。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">向量检索。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">普通 Python 规则。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">API 调用。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">人工审核暂停点。</span></li>
+
+</ul>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">节点输入当前 State，输出 State 的局部更新。节点不需要返回完整 State，只返回它修改的部分即可。</p>
+
+<h3 style="font-size:20px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:30px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 4px 10px #0891B233);">
+    <defs>
+        <linearGradient id="h3-grad-2" x1="2" y1="2" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0891B2" />
+            <stop offset="100%" stop-color="#34D399" />
+        </linearGradient>
+    </defs>
+    <path d="M9 1.5L11.15 6.2L16.5 9L11.15 11.8L9 16.5L6.85 11.8L1.5 9L6.85 6.2L9 1.5Z" fill="url(#h3-grad-2)"/>
+    <path d="M9 4.2L10.1 7L12.9 8.4L10.1 9.8L9 12.6L7.9 9.8L5.1 8.4L7.9 7L9 4.2Z" fill="rgba(255,255,255,0.92)"/>
+</svg><span style="display:inline-flex;flex-direction:column;"><span style="display:inline-block;">3. Edge：决定下一步去哪</span><span style="display:block;width:100%;height:3px;border-radius:999px;margin-top:6px;background:linear-gradient(90deg, #0891B2 0%, #34D399 100%);box-shadow:0 3px 10px #0891B222;"></span></span></h3>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">边分两类：</p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">固定边：A 永远执行完去 B。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">条件边：A 执行完以后，由路由函数根据 State 判断去 B、C 或 END。</span></li>
+
+</ul>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">flowchart LR
+    START --&gt; Classify
+    Classify --&gt;|billing| Billing
+    Classify --&gt;|bug| Bug
+    Classify --&gt;|question| Question
+    Billing --&gt; END
+    Bug --&gt; END
+    Question --&gt; END</code></pre></section>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-2" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-2)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-2)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">第一个 Graph API 示例：工单分类路由</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">完整代码已保存到：<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">output/courses/langgraph/code/02_graph_api_state_edges.py</code>。</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">from __future__ import annotations
+
+import operator
+from typing import Annotated, Literal
+
+from typing_extensions import TypedDict
+from langgraph.graph import END, START, StateGraph
+
+
+class TicketState(TypedDict):
+    ticket: str
+    category: str
+    steps: Annotated[list[str], operator.add]
+    answer: str
+
+
+def classify_ticket(state: TicketState) -&gt; dict:
+    text = state["ticket"].lower()
+    if any(word in text for word in ["charged", "invoice", "billing", "refund", "付款", "扣费"]):
+        category = "billing"
+    elif any(word in text for word in ["crash", "bug", "error", "报错", "崩溃"]):
+        category = "bug"
+    else:
+        category = "question"
+    return {"category": category, "steps": [f"分类为：{category}"]}
+
+
+def route_by_category(state: TicketState) -&gt; Literal["billing_node", "bug_node", "question_node"]:
+    if state["category"] == "billing":
+        return "billing_node"
+    if state["category"] == "bug":
+        return "bug_node"
+    return "question_node"
+
+
+def billing_node(state: TicketState) -&gt; dict:
+    return {"steps": ["进入账单处理流程"], "answer": "我会先核对账单记录，并为你创建退款/复核工单。"}
+
+
+def bug_node(state: TicketState) -&gt; dict:
+    return {"steps": ["进入缺陷处理流程"], "answer": "我会收集复现步骤、环境信息，并同步给研发排查。"}
+
+
+def question_node(state: TicketState) -&gt; dict:
+    return {"steps": ["进入普通问答流程"], "answer": "我会从知识库检索相关说明，并整理成简短回复。"}
+
+
+def build_graph():
+    builder = StateGraph(TicketState)
+    builder.add_node("classify_ticket", classify_ticket)
+    builder.add_node("billing_node", billing_node)
+    builder.add_node("bug_node", bug_node)
+    builder.add_node("question_node", question_node)
+
+    builder.add_edge(START, "classify_ticket")
+    builder.add_conditional_edges("classify_ticket", route_by_category)
+    builder.add_edge("billing_node", END)
+    builder.add_edge("bug_node", END)
+    builder.add_edge("question_node", END)
+    return builder.compile()</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这个例子里，<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">steps</code> 使用了 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">operator.add</code>。多个节点写入 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">steps</code> 时，不会互相覆盖，而是把轨迹追加起来。它特别适合记录执行路径。</p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-3" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#2563EB" />
+            <stop offset="100%" stop-color="#14B8A6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-3)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-3)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #EFF6FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #2563EB 0%, #14B8A6 100%);box-shadow:0 0 0 1px rgba(37,99,235,0.22), 0 6px 14px rgba(37,99,235,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">什么时候用 Command</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">条件边适合“只路由，不更新状态”。但有时我们希望一个节点既更新 State，又决定下一步。这时用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">Command</code> 更自然。</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">from langgraph.types import Command
+
+return Command(
+    update={"classification": classification},
+    goto="human_review"
+)</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">大白话：<span style="font-weight:bold;color:#625D9C;">条件边像路牌，只负责指路；Command 像边走边记笔记，既能写状态，也能指定下一站。</span></p>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(147,51,234,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-4" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#9333EA" />
+            <stop offset="100%" stop-color="#F59E0B" />
+        </linearGradient>
+        <radialGradient id="h2-rad-4" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-4)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-4)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #FAF5FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #9333EA 0%, #F59E0B 100%);box-shadow:0 0 0 1px rgba(147,51,234,0.22), 0 6px 14px rgba(147,51,234,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">客服邮件 Agent 的流程图</span></span></h2>
+
+<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjYyMCIgdmlld0JveD0iMCAwIDEyMDAgNjIwIj4KICA8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB4Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iIzBFQTVFOSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzIyQzU1RSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPgogIDxyZWN0IHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjYyMCIgcng9IjM2IiBmaWxsPSIjRjhGQUZDIi8+CiAgPHRleHQgeD0iNzAiIHk9IjgwIiBmb250LXNpemU9IjM0IiBmb250LWZhbWlseT0iUGluZ0ZhbmcgU0MsQXJpYWwiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMxMDIxM0UiPuWuouacjemCruS7tiBBZ2VudO+8muWFiOaLhua1geeoi++8jOWGjei/nuaIkOWbvjwvdGV4dD4KICA8ZyBmb250LWZhbWlseT0iUGluZ0ZhbmcgU0MsQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZvbnQtd2VpZ2h0PSI3MDAiPgogICAgPHJlY3QgeD0iODAiIHk9IjE1NSIgd2lkdGg9IjE3MCIgaGVpZ2h0PSI3MCIgcng9IjE4IiBmaWxsPSIjZmZmIiBzdHJva2U9IiM1REIyRTIiLz48dGV4dCB4PSIxMjMiIHk9IjE5OCIgZmlsbD0iIzEwMjEzRSI+UmVhZCBFbWFpbDwvdGV4dD4KICAgIDxyZWN0IHg9IjMzMCIgeT0iMTU1IiB3aWR0aD0iMTkwIiBoZWlnaHQ9IjcwIiByeD0iMTgiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzVEQjJFMiIvPjx0ZXh0IHg9IjM2OCIgeT0iMTk4IiBmaWxsPSIjMTAyMTNFIj5DbGFzc2lmeSBJbnRlbnQ8L3RleHQ+CiAgICA8cmVjdCB4PSI2MDAiIHk9Ijk1IiB3aWR0aD0iMTgwIiBoZWlnaHQ9IjcwIiByeD0iMTgiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzIyQzU1RSIvPjx0ZXh0IHg9IjY0MiIgeT0iMTM4IiBmaWxsPSIjMTAyMTNFIj5Eb2MgU2VhcmNoPC90ZXh0PgogICAgPHJlY3QgeD0iNjAwIiB5PSIyNDUiIHdpZHRoPSIxODAiIGhlaWdodD0iNzAiIHJ4PSIxOCIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjRjU5RTBCIi8+PHRleHQgeD0iNjM1IiB5PSIyODgiIGZpbGw9IiMxMDIxM0UiPkh1bWFuIFJldmlldzwvdGV4dD4KICAgIDxyZWN0IHg9Ijg1MCIgeT0iMTU1IiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjcwIiByeD0iMTgiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzYyNUQ5QyIvPjx0ZXh0IHg9Ijg4OCIgeT0iMTk4IiBmaWxsPSIjMTAyMTNFIj5EcmFmdCBSZXBseTwvdGV4dD4KICAgIDxyZWN0IHg9Ijg1MCIgeT0iMzY1IiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjcwIiByeD0iMTgiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzYyNUQ5QyIvPjx0ZXh0IHg9Ijg5NSIgeT0iNDA4IiBmaWxsPSIjMTAyMTNFIj5TZW5kIFJlcGx5PC90ZXh0PgogIDwvZz4KICA8ZyBzdHJva2U9InVybCgjZykiIHN0cm9rZS13aWR0aD0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48cGF0aCBkPSJNMjUwIDE5MEgzMzAiLz48cGF0aCBkPSJNNTIwIDE5MCBDNTYwIDE5MCA1NjAgMTMwIDYwMCAxMzAiLz48cGF0aCBkPSJNNTIwIDE5MCBDNTYwIDE5MCA1NjAgMjgwIDYwMCAyODAiLz48cGF0aCBkPSJNNzgwIDEzMCBDODIwIDEzMCA4MjAgMTkwIDg1MCAxOTAiLz48cGF0aCBkPSJNNzgwIDI4MCBDODQwIDI4MCA4NDAgMTkwIDg1MCAxOTAiLz48cGF0aCBkPSJNOTMwIDIyNVYzNjUiLz48L2c+CiAgPHRleHQgeD0iNTc1IiB5PSI0NDAiIGZvbnQtc2l6ZT0iMTgiIGZvbnQtZmFtaWx5PSJQaW5nRmFuZyBTQyxBcmlhbCIgZmlsbD0iIzY0NzQ4QiI+6auY6aOO6Zmp5Lu75Yqh5YWI5pqC5YGc77yM562J5Lq656Gu6K6k5ZCO5YaN57un57utPC90ZXh0Pgo8L3N2Zz4K" alt="客服邮件 Agent" style="max-width:100%;height:auto;border-radius:8px;display:block;margin:12px 0;box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这个 Agent 的关键点不是“能不能自动回复”，而是“哪些地方不能自动”。比如账单、退款、线上事故、法律风险，都应该先让人确认。</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">flowchart TD
+    START --&gt; Read[Read Email]
+    Read --&gt; Classify[Classify Intent]
+    Classify --&gt;|普通问题| Search[Doc Search]
+    Classify --&gt;|高风险| Review[Human Review]
+    Review --&gt;|approve| Search
+    Review --&gt;|reject| END
+    Search --&gt; Draft[Draft Reply]
+    Draft --&gt; Send[Send Reply]
+    Send --&gt; END</code></pre></section>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(110,91,255,0.24));">
+    <defs>
+        <linearGradient id="h2-grad-5" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#6E5BFF" />
+            <stop offset="100%" stop-color="#45C7FF" />
+        </linearGradient>
+        <radialGradient id="h2-rad-5" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-5)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-5)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F3F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #6E5BFF 0%, #45C7FF 100%);box-shadow:0 0 0 1px rgba(110,91,255,0.24), 0 6px 14px rgba(110,91,255,0.24);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">interrupt：让图暂停，等人回来</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;"><code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">interrupt()</code> 是 LangGraph 的 Human-in-the-loop 关键能力。它会暂停当前图，把一个 JSON 可序列化的 payload 返回给调用方。人类给出反馈后，用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">Command(resume=...)</code> 恢复。</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">review = interrupt({
+    "question": "这封邮件是否允许 Agent 继续处理？",
+    "classification": state["classification"],
+    "email": state["email_content"],
+})</code></pre></section>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">注意 3 个坑：</p>
+
+<ol style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">interrupt 需要 checkpointer</span>：否则暂停后不知道从哪里恢复。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">恢复必须使用同一个 thread_id</span>：它就是这次执行的存档编号。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;"><span style="font-weight:bold;color:#625D9C;">interrupt 前不要放非幂等副作用</span>：节点恢复时会从节点开头重新执行，可能导致重复写库、重复发邮件。</span></li>
+
+</ol>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(14,165,233,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-6" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0EA5E9" />
+            <stop offset="100%" stop-color="#22C55E" />
+        </linearGradient>
+        <radialGradient id="h2-rad-6" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-6)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-6)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #ECFEFF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #0EA5E9 0%, #22C55E 100%);box-shadow:0 0 0 1px rgba(14,165,233,0.22), 0 6px 14px rgba(14,165,233,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">客服邮件 Agent 核心代码</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">完整代码已保存到：<code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">output/courses/langgraph/code/03_thinking_email_agent.py</code>。</p>
+
+<section style="margin:12px 0;background-color:#282c34;border-radius:5px;"><pre style="margin:0;"><code style="overflow-x:auto;padding:12px 16px;color:#abb2bf;background:#282c34;border-radius:5px;display:block;font-family:Consolas,Monaco,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;">from typing import Literal, TypedDict
+
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command, interrupt
+
+
+class EmailClassification(TypedDict):
+    intent: Literal["question", "bug", "billing", "feature", "complex"]
+    urgency: Literal["low", "medium", "high", "critical"]
+    topic: str
+    summary: str
+
+
+class EmailAgentState(TypedDict):
+    email_content: str
+    sender_email: str
+    email_id: str
+    classification: EmailClassification | None
+    search_results: list[str]
+    draft_response: str
+    approved: bool | None
+    final_response: str
+
+
+def classify_intent(state: EmailAgentState) -&gt; Command[Literal["search_documentation", "human_review"]]:
+    content = state["email_content"].lower()
+    if "charged" in content or "扣费" in content or "billing" in content:
+        classification = {
+            "intent": "billing",
+            "urgency": "critical",
+            "topic": "账单异常",
+            "summary": "用户反馈疑似重复扣费，需要人工确认。",
+        }
+    else:
+        classification = {
+            "intent": "question",
+            "urgency": "low",
+            "topic": "普通问题",
+            "summary": "用户提出产品使用问题，可先检索文档。",
+        }
+
+    goto = "human_review" if classification["urgency"] in {"high", "critical"} else "search_documentation"
+    return Command(update={"classification": classification}, goto=goto)
+
+
+def human_review(state: EmailAgentState) -&gt; Command[Literal["search_documentation", "send_reply", "__end__"]]:
+    review = interrupt({
+        "question": "这封邮件是否允许 Agent 继续处理？",
+        "classification": state["classification"],
+        "email": state["email_content"],
+        "expected_input": "approve / reject / send_now",
+    })
+
+    if review == "reject":
+        return Command(update={"approved": False, "final_response": "已转人工处理。"}, goto=END)
+    if review == "send_now":
+        return Command(update={"approved": True, "draft_response": "已确认，客服会优先处理该账单问题。"}, goto="send_reply")
+    return Command(update={"approved": True}, goto="search_documentation")
+
+
+def build_graph():
+    builder = StateGraph(EmailAgentState)
+    builder.add_node("read_email", lambda state: {})
+    builder.add_node("classify_intent", classify_intent)
+    builder.add_node("search_documentation", lambda state: {"search_results": ["知识库命中：账单异常处理说明"]})
+    builder.add_node("draft_response", lambda state: {"draft_response": "你好，我们已收到你的反馈，会继续跟进。"})
+    builder.add_node("human_review", human_review)
+    builder.add_node("send_reply", lambda state: {"final_response": state["draft_response"]})
+
+    builder.add_edge(START, "read_email")
+    builder.add_edge("read_email", "classify_intent")
+    builder.add_edge("search_documentation", "draft_response")
+    builder.add_edge("draft_response", "send_reply")
+    builder.add_edge("send_reply", END)
+    return builder.compile(checkpointer=InMemorySaver())</code></pre></section>
+
+<h2 style="font-size:22px;font-weight:800;line-height:1.7em;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;color:#10213E;margin-top:34px;margin-bottom:18px;padding:0 0 10px 0;border-bottom:1px solid #F5F5F6;display:flex;align-items:center;gap:10px;">
+<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none;filter:drop-shadow(0 6px 14px rgba(124,58,237,0.22));">
+    <defs>
+        <linearGradient id="h2-grad-7" x1="3" y1="3" x2="23" y2="23" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7C3AED" />
+            <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+        <radialGradient id="h2-rad-7" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(9 8) rotate(43) scale(16 18)">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-grad-7)"/>
+    <rect x="2.2" y="2.2" width="21.6" height="21.6" rx="7.2" fill="url(#h2-rad-7)" opacity="0.8"/>
+    <path d="M7.5 15.5C8.9 11.2 12 8.7 17.6 8.2" stroke="rgba(255,255,255,0.72)" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M9 18.2C12.4 17 15.3 14.1 16.7 10.6" stroke="rgba(255,255,255,0.88)" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="18.1" cy="8.1" r="1.8" fill="#FFFFFF"/>
+    <circle cx="8.2" cy="18" r="1.45" fill="rgba(255,255,255,0.86)"/>
+    <path d="M18.8 5.3L19.35 6.55L20.7 7.05L19.35 7.55L18.8 8.8L18.25 7.55L16.9 7.05L18.25 6.55L18.8 5.3Z" fill="#FFFFFF" opacity="0.98"/>
+</svg><span style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(90deg, #F8F0FF 0%, rgba(255,255,255,0) 100%);padding:6px 14px 6px 8px;border-radius:14px;"><span style="width:6px;height:28px;border-radius:999px;background:linear-gradient(180deg, #7C3AED 0%, #F472B6 100%);box-shadow:0 0 0 1px rgba(124,58,237,0.22), 0 6px 14px rgba(124,58,237,0.22);display:inline-block;"></span><span style="display:inline-block;letter-spacing:0.2px;">第二讲小结</span></span></h2>
+
+<p style="font-weight:400;font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;word-break:break-all;color:#10213E;font-size:15px;line-height:1.8;margin:18px 0;">这一讲最重要的是：<span style="font-weight:bold;color:#625D9C;">不要一上来就写 Agent，先画流程。</span></p>
+
+<ul style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;line-height:30px;padding-left:0;list-style:none;">
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">稳定路径用固定边。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">分支路径用条件边。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">同时更新状态和路由，用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">Command</code>。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">高风险动作前，用 <code style="background-color:#F5F5F6;padding:2px 6px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#10213E;border:1px solid #5DB2E233;">interrupt</code> 让人介入。</span></li>
+<li style="list-style:none;margin:8px 0;display:flex;align-items:flex-start;"><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#5DB2E2;margin-right:8px;font-weight:bold;">•</span><span style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;font-size:15px;color:#10213E; flex: 1;">需要暂停和恢复，就必须配 checkpointer 和 thread_id。</span></li>
+
+</ul>
+
+    
+<section style="font-family:MiSans, 'PingFang SC', system-ui, -apple-system, sans-serif;margin:32px 0 12px 0;padding:0;">
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># LangGraph</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Graph API</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Agent 架构</span>
+<span style="display:inline-block;font-size:12px;color:#10213E;background-color:#F5F5F6;padding:4px 14px;border-radius:20px;margin:4px 8px 4px 0;border:1px solid #5DB2E244;font-weight:bold;"># Human-in-the-loop</span>
+</section>
+
+  </div>
+</div>
+</body>
+</html>

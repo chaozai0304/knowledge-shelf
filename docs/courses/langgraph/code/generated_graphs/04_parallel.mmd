@@ -1,0 +1,22 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	write_joke(write_joke)
+	write_story(write_story)
+	write_poem(write_poem)
+	aggregate(aggregate)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> write_joke;
+	__start__ --> write_poem;
+	__start__ --> write_story;
+	write_joke --> aggregate;
+	write_poem --> aggregate;
+	write_story --> aggregate;
+	aggregate --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

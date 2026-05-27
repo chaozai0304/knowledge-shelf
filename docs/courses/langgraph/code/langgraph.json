@@ -1,0 +1,18 @@
+{
+  "dependencies": [
+    "langgraph>=1.0.0",
+    "langchain>=1.0.0",
+    "langchain-openai>=1.0.0",
+    "langchain-core>=1.0.0",
+    "python-dotenv>=1.0.1"
+  ],
+  "graphs": {
+    "calculator_agent": "./01_install_quickstart_calculator.py:graph",
+    "ticket_router": "./02_graph_api_state_edges.py:graph",
+    "email_review_agent": "./03_thinking_email_agent.py:graph",
+    "prompt_chain": "./04_workflows_agents_patterns.py:prompt_chain_graph",
+    "parallel_writer": "./04_workflows_agents_patterns.py:parallel_graph",
+    "evaluator_optimizer": "./04_workflows_agents_patterns.py:evaluator_optimizer_graph"
+  },
+  "env": ".env"
+}

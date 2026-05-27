@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#6E5BFF"/><stop offset="1" stop-color="#45C7FF"/></linearGradient></defs>
+  <rect width="1200" height="560" rx="36" fill="#FFFFFF"/>
+  <rect x="40" y="40" width="1120" height="480" rx="30" fill="#F5F5F6"/>
+  <text x="80" y="100" font-size="34" font-family="PingFang SC,Arial" font-weight="800" fill="#10213E">LangGraph 的三件套</text>
+  <g font-family="PingFang SC,Arial">
+    <circle cx="240" cy="300" r="105" fill="url(#g)" opacity="0.95"/><text x="196" y="292" font-size="28" font-weight="800" fill="#fff">State</text><text x="154" y="330" font-size="17" fill="#fff">共享小本子</text>
+    <circle cx="600" cy="300" r="105" fill="#10213E" opacity="0.95"/><text x="558" y="292" font-size="28" font-weight="800" fill="#fff">Node</text><text x="514" y="330" font-size="17" fill="#fff">真正干活的函数</text>
+    <circle cx="960" cy="300" r="105" fill="#625D9C" opacity="0.95"/><text x="922" y="292" font-size="28" font-weight="800" fill="#fff">Edge</text><text x="874" y="330" font-size="17" fill="#fff">决定下一步去哪</text>
+  </g>
+  <g stroke="#5DB2E2" stroke-width="5" fill="none" stroke-linecap="round"><path d="M350 300H490"/><path d="M710 300H850"/></g>
+  <text x="395" y="268" font-size="18" font-family="PingFang SC,Arial" fill="#64748B">读/写</text><text x="755" y="268" font-size="18" font-family="PingFang SC,Arial" fill="#64748B">路由</text>
+</svg>
