@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#2563EB"/><stop offset="1" stop-color="#14B8A6"/></linearGradient></defs>
+  <rect width="1200" height="560" rx="36" fill="#F8FAFC"/>
+  <text x="70" y="82" font-size="34" font-family="PingFang SC,Arial" font-weight="800" fill="#10213E">LangGraph Local Server：把图变成可调试服务</text>
+  <g font-family="PingFang SC,Arial" font-size="20" font-weight="800" fill="#10213E">
+    <rect x="100" y="220" width="210" height="90" rx="22" fill="#fff" stroke="#5DB2E2"/><text x="147" y="272">graph 代码</text>
+    <rect x="395" y="220" width="210" height="90" rx="22" fill="#fff" stroke="#625D9C"/><text x="442" y="272">langgraph dev</text>
+    <rect x="690" y="140" width="240" height="90" rx="22" fill="#fff" stroke="#22C55E"/><text x="745" y="192">Studio UI</text>
+    <rect x="690" y="300" width="240" height="90" rx="22" fill="#fff" stroke="#F59E0B"/><text x="748" y="352">HTTP API</text>
+  </g>
+  <g stroke="url(#g)" stroke-width="5" fill="none" stroke-linecap="round"><path d="M310 265H395"/><path d="M605 265 C650 265 650 185 690 185"/><path d="M605 265 C650 265 650 345 690 345"/></g>
+  <text x="126" y="390" font-size="17" font-family="PingFang SC,Arial" fill="#64748B">同一份图，既能本地跑，也能通过 Server 调试和调用</text>
+</svg>

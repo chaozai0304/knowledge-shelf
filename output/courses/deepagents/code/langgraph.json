@@ -1,0 +1,9 @@
+{
+  "dependencies": [
+    "."
+  ],
+  "graphs": {
+    "deepagents_course_agent": "./05_streaming_interpreters_production.py:agent"
+  },
+  "env": ".env"
+}

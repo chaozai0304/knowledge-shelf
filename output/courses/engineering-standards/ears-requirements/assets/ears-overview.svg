@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8FBFF"/><stop offset="1" stop-color="#F2F0FF"/></linearGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5DB2E2"/><stop offset="1" stop-color="#625D9C"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#10213E" flood-opacity="0.15"/></filter>
+    <style>.title{font:800 32px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#10213E}.sub{font:500 16px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#64748B}.h{font:800 19px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#10213E}.p{font:500 14px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#64748B}.white{font:800 28px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#fff}.line{stroke:#5DB2E2;stroke-width:2.5;stroke-dasharray:7 7;fill:none;opacity:.85}</style>
+  </defs>
+  <rect width="960" height="560" rx="30" fill="url(#bg)"/>
+  <text x="52" y="62" class="title">EARS：把自然语言需求写成“可理解、可验证、可交付”的标准句式</text>
+  <text x="52" y="94" class="sub">Easy Approach to Requirements Syntax：用少量句式模板，降低需求歧义和漏项</text>
+  <circle cx="480" cy="300" r="92" fill="url(#core)" filter="url(#shadow)"/>
+  <text x="480" y="292" text-anchor="middle" class="white">EARS</text>
+  <text x="480" y="324" text-anchor="middle" style="font:600 15px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#EEF8FF">需求句式标准化</text>
+  <path d="M480 206 C480 164 480 146 480 124" class="line"/>
+  <path d="M566 266 C640 226 696 188 760 146" class="line"/>
+  <path d="M564 336 C640 378 696 414 760 454" class="line"/>
+  <path d="M396 336 C318 378 262 414 198 454" class="line"/>
+  <path d="M394 266 C318 226 262 188 198 146" class="line"/>
+  <g filter="url(#shadow)">
+    <rect x="338" y="112" width="284" height="76" rx="20" fill="#fff"/><text x="480" y="144" text-anchor="middle" class="h">统一表达</text><text x="480" y="169" text-anchor="middle" class="p">同一类需求，用同一类句式</text>
+    <rect x="690" y="112" width="220" height="84" rx="20" fill="#fff"/><text x="800" y="146" text-anchor="middle" class="h">减少歧义</text><text x="800" y="171" text-anchor="middle" class="p">谁、何时、做什么更清楚</text>
+    <rect x="690" y="412" width="220" height="84" rx="20" fill="#fff"/><text x="800" y="446" text-anchor="middle" class="h">便于验收</text><text x="800" y="471" text-anchor="middle" class="p">需求天然带触发和结果</text>
+    <rect x="50" y="412" width="220" height="84" rx="20" fill="#fff"/><text x="160" y="446" text-anchor="middle" class="h">适合评审</text><text x="160" y="471" text-anchor="middle" class="p">快速发现条件和异常漏项</text>
+    <rect x="50" y="112" width="220" height="84" rx="20" fill="#fff"/><text x="160" y="146" text-anchor="middle" class="h">适合 AI 转化</text><text x="160" y="171" text-anchor="middle" class="p">模板化，方便大模型批量整理</text>
+  </g>
+</svg>

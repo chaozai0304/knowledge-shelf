@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620" viewBox="0 0 900 620">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F0F9FF"/></linearGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0EA5E9"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#10213E" flood-opacity="0.12"/></filter>
+    <style>.title{font:800 30px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#10213E}.sub{font:500 15px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#64748B}.h{font:800 18px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#10213E}.p{font:500 13px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#64748B}.tag{font:800 13px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#fff}.line{stroke:#7C3AED;stroke-width:3;fill:none;marker-end:url(#arrow);opacity:.75}</style>
+  </defs>
+  <rect width="900" height="620" rx="30" fill="url(#bg)"/>
+  <text x="46" y="58" class="title">示例：一次前端改版任务的 Harness</text>
+  <text x="46" y="88" class="sub">没有 Harness：靠猜；有 Harness：按规则看、改、测、验、交付</text>
+  <g filter="url(#shadow)">
+    <rect x="52" y="132" width="232" height="120" rx="20" fill="#fff"/><rect x="76" y="154" width="74" height="26" rx="13" fill="url(#g)"/><text x="113" y="172" text-anchor="middle" class="tag">规则</text><text x="76" y="204" class="h">UI 工作说明</text><text x="76" y="232" class="p">设计系统、断点、禁用库、不可改 API</text>
+    <rect x="334" y="132" width="232" height="120" rx="20" fill="#fff"/><rect x="358" y="154" width="74" height="26" rx="13" fill="url(#g)"/><text x="395" y="172" text-anchor="middle" class="tag">执行</text><text x="358" y="204" class="h">Agent 修改代码</text><text x="358" y="232" class="p">读组件、改样式、保持接口兼容</text>
+    <rect x="616" y="132" width="232" height="120" rx="20" fill="#fff"/><rect x="640" y="154" width="74" height="26" rx="13" fill="url(#g)"/><text x="677" y="172" text-anchor="middle" class="tag">工具</text><text x="640" y="204" class="h">自动截图与控制台检查</text><text x="640" y="232" class="p">桌面、移动端、console error</text>
+    <rect x="194" y="346" width="232" height="120" rx="20" fill="#fff"/><rect x="218" y="368" width="74" height="26" rx="13" fill="url(#g)"/><text x="255" y="386" text-anchor="middle" class="tag">验证</text><text x="218" y="418" class="h">相关测试与类型检查</text><text x="218" y="446" class="p">只跑和变更相关的最小验证集合</text>
+    <rect x="476" y="346" width="232" height="120" rx="20" fill="#fff"/><rect x="500" y="368" width="74" height="26" rx="13" fill="url(#g)"/><text x="537" y="386" text-anchor="middle" class="tag">交付</text><text x="500" y="418" class="h">带证据提交结果</text><text x="500" y="446" class="p">截图路径、验证命令、风险说明</text>
+  </g>
+  <path class="line" d="M284 192 H330"/>
+  <path class="line" d="M566 192 H612"/>
+  <path class="line" d="M732 256 C732 310 660 330 602 344"/>
+  <path class="line" d="M476 406 H430"/>
+  <text x="450" y="548" text-anchor="middle" style="font:800 21px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#625D9C">大白话：别让 Agent 在黑屋里改页面，给它灯、尺子、检查表和交付模板</text>
+</svg>

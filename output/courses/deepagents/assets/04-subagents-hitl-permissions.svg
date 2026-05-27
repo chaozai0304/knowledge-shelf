@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360">
+  <rect width="900" height="360" rx="28" fill="#F7F8FC"/>
+  <text x="450" y="45" text-anchor="middle" font-size="28" font-family="Arial" font-weight="700" fill="#10213E">子智能体 + 人工审批 + 权限</text>
+  <g font-family="Arial" font-size="15" fill="#10213E">
+    <rect x="55" y="125" width="135" height="70" rx="16" fill="#E8F0FF" stroke="#2F6BFF"/><text x="122" y="166" text-anchor="middle" font-weight="700">主 Agent</text>
+    <rect x="260" y="75" width="155" height="70" rx="16" fill="#ECEAFF" stroke="#625D9C"/><text x="337" y="116" text-anchor="middle">合规子智能体</text>
+    <rect x="260" y="205" width="155" height="70" rx="16" fill="#ECEAFF" stroke="#625D9C"/><text x="337" y="246" text-anchor="middle">研究子智能体</text>
+    <rect x="505" y="95" width="150" height="110" rx="18" fill="#FFF4E8" stroke="#FF9F2F"/><text x="580" y="130" text-anchor="middle" font-weight="700">interrupt_on</text><text x="580" y="162" text-anchor="middle">approve</text><text x="580" y="184" text-anchor="middle">edit / reject</text>
+    <rect x="720" y="100" width="130" height="100" rx="18" fill="#EAFBF3" stroke="#2FA66A"/><text x="785" y="135" text-anchor="middle" font-weight="700">权限层</text><text x="785" y="165" text-anchor="middle">allow / deny</text><text x="785" y="187" text-anchor="middle">first match</text>
+  </g>
+  <g stroke="#2F6BFF" stroke-width="3" fill="none" marker-end="url(#arrow)"><path d="M190 150 L260 110"/><path d="M190 170 L260 240"/><path d="M415 110 H505"/><path d="M655 150 H720"/></g>
+  <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2F6BFF"/></marker></defs>
+</svg>

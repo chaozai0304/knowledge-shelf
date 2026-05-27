@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#5DB2E2"/><stop offset="1" stop-color="#625D9C"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-opacity="0.18"/></filter></defs>
+  <rect width="1200" height="520" rx="36" fill="#F5F7FB"/>
+  <text x="70" y="82" font-size="34" font-family="PingFang SC,Arial" font-weight="800" fill="#10213E">LangGraph 快速入门：计算器 Agent 闭环</text>
+  <text x="70" y="122" font-size="18" font-family="PingFang SC,Arial" fill="#64748B">模型负责决策，工具负责执行，条件边负责判断是否继续</text>
+  <g filter="url(#s)" font-family="PingFang SC,Arial" font-size="20" font-weight="700">
+    <rect x="80" y="220" width="180" height="88" rx="22" fill="#fff"/><text x="128" y="272" fill="#10213E">用户输入</text>
+    <rect x="345" y="220" width="190" height="88" rx="22" fill="#fff"/><text x="394" y="272" fill="#10213E">LLM 节点</text>
+    <rect x="620" y="220" width="190" height="88" rx="22" fill="#fff"/><text x="662" y="272" fill="#10213E">工具节点</text>
+    <rect x="895" y="220" width="190" height="88" rx="22" fill="#fff"/><text x="938" y="272" fill="#10213E">最终回答</text>
+  </g>
+  <g stroke="url(#g)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M260 264H338"/><path d="M327 252l14 12-14 12"/>
+    <path d="M535 264H613"/><path d="M602 252l14 12-14 12"/>
+    <path d="M810 264H888"/><path d="M877 252l14 12-14 12"/>
+    <path d="M715 318 C715 390 440 390 440 318"/><path d="M452 329l-12-14-12 14"/>
+  </g>
+  <text x="566" y="396" font-size="18" font-family="PingFang SC,Arial" fill="#625D9C" font-weight="700">工具结果回到 LLM，再判断是否继续</text>
+</svg>

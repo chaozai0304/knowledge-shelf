@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360">
+  <rect width="900" height="360" rx="28" fill="#F6F8FF"/>
+  <text x="450" y="45" text-anchor="middle" font-size="28" font-family="Arial" font-weight="700" fill="#10213E">生产化与流式观测</text>
+  <g font-family="Arial" font-size="15" fill="#10213E">
+    <rect x="45" y="120" width="120" height="70" rx="16" fill="#FFFFFF" stroke="#2F6BFF"/><text x="105" y="162" text-anchor="middle">前端 UI</text>
+    <rect x="230" y="95" width="140" height="120" rx="18" fill="#E8F0FF" stroke="#2F6BFF"/><text x="300" y="130" text-anchor="middle" font-weight="700">stream_events</text><text x="300" y="162" text-anchor="middle">messages</text><text x="300" y="184" text-anchor="middle">subagents</text>
+    <rect x="440" y="80" width="150" height="150" rx="20" fill="#ECEAFF" stroke="#625D9C"/><text x="515" y="116" text-anchor="middle" font-weight="700">Deep Agent</text><text x="515" y="150" text-anchor="middle">Thread</text><text x="515" y="174" text-anchor="middle">User</text><text x="515" y="198" text-anchor="middle">Assistant</text>
+    <rect x="675" y="75" width="150" height="60" rx="16" fill="#EAFBF3" stroke="#2FA66A"/><text x="750" y="112" text-anchor="middle">Store / Memory</text>
+    <rect x="675" y="170" width="150" height="60" rx="16" fill="#FFF4E8" stroke="#FF9F2F"/><text x="750" y="207" text-anchor="middle">Sandbox</text>
+    <rect x="675" y="265" width="150" height="50" rx="16" fill="#F5F5F6" stroke="#888"/><text x="750" y="296" text-anchor="middle">LangSmith Trace</text>
+  </g>
+  <g stroke="#2F6BFF" stroke-width="3" fill="none" marker-end="url(#arrow)"><path d="M165 155 H230"/><path d="M370 155 H440"/><path d="M590 110 H675"/><path d="M590 190 H675"/><path d="M590 220 L675 285"/></g>
+  <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2F6BFF"/></marker></defs>
+</svg>

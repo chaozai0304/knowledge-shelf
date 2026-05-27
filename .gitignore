@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# Environment
+.env
+.env.*
+**/.env
+**/.env.*
+.venv/
+
+# Editor
+.vscode/
+
+# Python / runtime caches
+__pycache__/
+*.pyc
+
+# Local runtime state
+.langgraph_api/
+
+# Ignore local skill workspace assets
+.github/skills/
+
+# Ignore local raw conference image materials
+aidd分享图片/

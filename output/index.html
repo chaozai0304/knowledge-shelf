@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 学习资料库</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --surface-2: #fbfcfe;
+      --text: #172033;
+      --muted: #6b7688;
+      --subtle: #8a95a8;
+      --border: #e6eaf0;
+      --border-strong: #d6dce7;
+      --accent: #2563eb;
+      --accent-2: #6d5dfc;
+      --accent-soft: #eff5ff;
+      --sidebar: 320px;
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(16, 24, 40, 0.07);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      color: var(--text);
+      background: var(--bg);
+      font-family: Inter, MiSans, "PingFang SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar) 1fr;
+      height: 100vh;
+      transition: grid-template-columns .22s ease;
+    }
+
+    .app.sidebar-collapsed { grid-template-columns: 58px 1fr; }
+
+    .sidebar {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .sidebar-top {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border);
+      flex: none;
+    }
+
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      flex: none;
+    }
+
+    .brand-text { min-width: 0; }
+    .brand-title { font-size: 15px; font-weight: 850; line-height: 1.2; white-space: nowrap; }
+    .brand-subtitle { margin-top: 2px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+    .icon-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: .18s ease;
+      flex: none;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--border-strong); background: var(--surface-2); }
+    .collapse-btn { margin-left: auto; }
+
+    .intro {
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .intro h1 {
+      margin: 0 0 8px;
+      font-size: 23px;
+      line-height: 1.2;
+      letter-spacing: -0.4px;
+    }
+    .intro p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .search-panel { padding: 14px 14px 10px; }
+    .search-box {
+      position: relative;
+    }
+    .search-box svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--subtle);
+    }
+    .search {
+      width: 100%;
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px 0 36px;
+      outline: none;
+      color: var(--text);
+      background: #f9fafb;
+      font-size: 13px;
+    }
+    .search:focus { border-color: #93b4ff; background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,.10); }
+
+    .nav {
+      padding: 4px 10px 20px;
+      overflow: auto;
+      min-height: 0;
+    }
+
+    .group { margin: 4px 0; }
+    .group-header {
+      width: 100%;
+      height: 34px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 8px;
+      border-radius: 9px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .group-header:hover { background: #f6f8fb; color: var(--text); }
+    .chevron { transition: transform .18s ease; color: var(--subtle); }
+    .group.collapsed .chevron { transform: rotate(-90deg); }
+    .group-name { flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .group-count { color: var(--subtle); font-size: 11px; }
+    .group-items { padding: 2px 0 8px 0; }
+    .group.collapsed .group-items { display: none; }
+
+    .item {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 9px;
+      align-items: flex-start;
+      padding: 8px 8px;
+      border-radius: 10px;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: .14s ease;
+    }
+    .item:hover { background: #f4f7fb; }
+    .item.active { background: var(--accent-soft); color: #173b8f; }
+    .item.active .doc-dot { background: var(--accent); color: #fff; }
+    .doc-dot {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      color: var(--muted);
+      background: #eef1f6;
+      font-size: 10px;
+      font-weight: 850;
+      margin-top: 1px;
+    }
+    .item-title { display: block; font-size: 13px; font-weight: 750; line-height: 1.35; }
+    .item-desc { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+
+    .sidebar-footer {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      flex: none;
+    }
+
+    .app.sidebar-collapsed .brand-text,
+    .app.sidebar-collapsed .intro,
+    .app.sidebar-collapsed .search-panel,
+    .app.sidebar-collapsed .group-name,
+    .app.sidebar-collapsed .group-count,
+    .app.sidebar-collapsed .item-title,
+    .app.sidebar-collapsed .item-desc,
+    .app.sidebar-collapsed .sidebar-footer { display: none; }
+    .app.sidebar-collapsed .sidebar-top { padding: 0 11px; justify-content: center; }
+    .app.sidebar-collapsed .collapse-btn { margin-left: 0; }
+    .app.sidebar-collapsed .nav { padding: 10px 8px; }
+    .app.sidebar-collapsed .group-header { justify-content: center; padding: 0; }
+    .app.sidebar-collapsed .chevron { display: none; }
+    .app.sidebar-collapsed .item { grid-template-columns: 1fr; padding: 7px; place-items: center; }
+    .app.sidebar-collapsed .doc-dot { margin: 0; }
+
+    .workspace {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 64px 1fr;
+    }
+
+    .topbar {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 0 22px;
+      background: rgba(255,255,255,.86);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    .crumbs {
+      min-width: 0;
+    }
+    .breadcrumb {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .doc-title {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 850;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .actions { display: flex; align-items: center; gap: 8px; flex: none; }
+    .btn {
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--surface);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 750;
+      white-space: nowrap;
+      transition: .16s ease;
+    }
+    .btn:hover { border-color: var(--border-strong); background: #f9fafb; }
+    .btn.primary { color: #fff; border-color: transparent; background: var(--accent); }
+    .btn.primary:hover { background: #1d4ed8; }
+
+    .content-shell {
+      min-height: 0;
+      padding: 22px;
+      overflow: hidden;
+    }
+    .viewer-card {
+      height: 100%;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+
+    @media (max-width: 920px) {
+      body { height: auto; overflow: auto; }
+      .app, .app.sidebar-collapsed { display: block; height: auto; }
+      .sidebar { height: 52vh; border-right: 0; border-bottom: 1px solid var(--border); }
+      .workspace { height: 92vh; }
+      .topbar { align-items: flex-start; height: auto; padding: 14px; flex-direction: column; }
+      .actions { width: 100%; flex-wrap: wrap; }
+      .content-shell { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="logo">AI</div>
+        <div class="brand-text">
+          <div class="brand-title">AI 学习资料库</div>
+          <div class="brand-subtitle">Personal Knowledge Base</div>
+        </div>
+        <button id="toggleSidebar" class="icon-btn collapse-btn" title="收起/展开侧边栏" aria-label="收起/展开侧边栏">☰</button>
+      </div>
+
+      <section class="intro">
+        <h1>学习中心</h1>
+        <p>按领域沉淀课程、代码与发布稿。像在线知识库一样浏览，也方便后续继续扩展。</p>
+      </section>
+
+      <section class="search-panel">
+        <div class="search-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.8 18.1a7.3 7.3 0 1 1 0-14.6 7.3 7.3 0 0 1 0 14.6Zm5.2-1.6 4.2 4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="search" class="search" placeholder="搜索文档、课程、领域..." />
+        </div>
+      </section>
+
+      <nav id="nav" class="nav"></nav>
+      <footer class="sidebar-footer">output/index.html · 本地学习门户</footer>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="crumbs">
+          <div id="breadcrumb" class="breadcrumb">请选择文档</div>
+          <h2 id="docTitle" class="doc-title">AI 学习资料库</h2>
+        </div>
+        <div class="actions">
+          <a id="openBtn" class="btn primary" href="#" target="_blank" rel="noreferrer">新窗口打开</a>
+          <a class="btn" href="README.md" target="_blank" rel="noreferrer">目录规范</a>
+        </div>
+      </header>
+
+      <section class="content-shell">
+        <div class="viewer-card">
+          <iframe id="viewer" title="学习内容预览"></iframe>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const catalog = [
+      {
+        group: 'LangGraph 系列', icon: 'LG', defaultOpen: true,
+        items: [
+          { title: '第一讲：安装与快速入门', desc: '计算器 Agent、State / Node / Edge 基础闭环', path: 'courses/langgraph/01-install-quickstart-wechat.html' },
+          { title: '第二讲：Graph API 与用图思考', desc: 'State 设计、Command、interrupt、客服邮件 Agent', path: 'courses/langgraph/02-graph-thinking-wechat.html' },
+          { title: '第三讲：工作流与 Agent 模式', desc: '链式、并行、路由、评估优化与 Agent 循环', path: 'courses/langgraph/03-workflows-agents-wechat.html' },
+          { title: '第四讲：Local Server 与 Studio', desc: 'langgraph dev、本地服务、Studio、SDK 调用', path: 'courses/langgraph/04-local-server-wechat.html' }
+        ]
+      },
+      {
+        group: 'Deep Agents 系列', icon: 'DA', defaultOpen: false,
+        items: [
+          { title: '第一讲：Harness 快速入门', desc: '长任务智能体、Harness 心智模型与资料研究员', path: 'courses/deepagents/01-quickstart-harness-wechat.html' },
+          { title: '第二讲：定制模型与工具', desc: 'provider:model、工具、提示词、结构化输出与 profiles', path: 'courses/deepagents/02-customization-models-tools-wechat.html' },
+          { title: '第三讲：上下文与记忆', desc: 'Context engineering、Backend、Memory 与 Skills', path: 'courses/deepagents/03-context-backends-memory-skills-wechat.html' },
+          { title: '第四讲：子智能体与安全', desc: 'Subagents、HITL、permissions 与 sandboxes', path: 'courses/deepagents/04-subagents-hitl-permissions-wechat.html' },
+          { title: '第五讲：解释器与生产化', desc: 'Interpreters、streaming、event streaming 与部署', path: 'courses/deepagents/05-interpreters-streaming-production-wechat.html' }
+        ]
+      },
+      {
+        group: 'LangChain 系列', icon: 'LC', defaultOpen: false,
+        items: [
+          { title: 'LangChain 第三讲', desc: 'LangChain 讲解系列内容', path: 'courses/langchain/langchain-third-wechat.html' },
+          { title: 'Middleware 机制', desc: '中间件与 Agent 执行生命周期', path: 'courses/langchain/langchain-middleware-wechat.html' },
+          { title: 'Streaming 流式输出', desc: '流式模式、消息事件与前端体验', path: 'courses/langchain/langchain-streaming-wechat.html' },
+          { title: 'Structured Output', desc: '结构化输出与 schema 驱动', path: 'courses/langchain/langchain-structured-output-wechat.html' }
+        ]
+      },
+      {
+        group: '模型微调', icon: 'FT', defaultOpen: false,
+        items: [
+          { title: 'Fine-tuning 入门', desc: '微调基础概念与实践导览', path: 'courses/fine-tuning/fine-tuning-intro-wechat.html' }
+        ]
+      },
+      {
+        group: 'Agent 工具与 Skills', icon: 'AG', defaultOpen: false,
+        items: [
+          { title: 'Harness Agents', desc: 'Harness Agents 相关讲解', path: 'courses/agents/harness-agents/harness-agents-wechat.html' },
+          { title: 'Harness Engine', desc: 'Harness Engine 相关讲解', path: 'courses/agents/harness-agents/harness-engineering-wechat.html' }
+
+        ]
+      },
+      {
+        group: '工程标准', icon: 'STD', defaultOpen: false,
+        items: [
+          { title: 'EARS 需求标准化手册', desc: 'EARS 方法定义、句式、技巧、质量门与落地实践', path: 'courses/engineering-standards/ears-requirements/ears-requirements-standard-wechat.html' },
+          { title: 'EARS 示例库', desc: '覆盖简单与复杂场景的 EARS 改写示例与验收参考', path: 'courses/engineering-standards/ears-requirements/ears-examples-library.html' },
+          { title: 'EARS × 大模型转化手册', desc: '借助大模型将原始需求转成 EARS 的流程、提示词与校验方法', path: 'courses/engineering-standards/ears-requirements/ears-llm-conversion-playbook.html' }
+        ]
+      },
+      {
+        group: '资料与规范', icon: 'DOC', defaultOpen: false,
+        items: [
+          { title: '目录结构规范', desc: 'output 目录新增内容规则', path: 'README.md' },
+          { title: 'LangGraph 代码运行说明', desc: '依赖、环境变量与本地服务启动说明', path: 'courses/langgraph/README.md' },
+          { title: 'Deep Agents 代码运行说明', desc: '依赖、环境变量与 Deep Agents 示例说明', path: 'courses/deepagents/README.md' }
+        ]
+      }
+    ];
+
+    const app = document.getElementById('app');
+    const nav = document.getElementById('nav');
+    const viewer = document.getElementById('viewer');
+    const docTitle = document.getElementById('docTitle');
+    const breadcrumb = document.getElementById('breadcrumb');
+    const openBtn = document.getElementById('openBtn');
+    const search = document.getElementById('search');
+    const toggleSidebar = document.getElementById('toggleSidebar');
+
+    const collapsedGroups = new Set(
+      catalog.filter(group => !group.defaultOpen).map(group => group.group)
+    );
+    let activePath = '';
+
+    function flatCatalog() {
+      return catalog.flatMap(group => group.items.map(item => ({ ...item, group: group.group, icon: group.icon })));
+    }
+
+    function withGroup(item, group) {
+      return { ...item, group: group.group, icon: group.icon };
+    }
+
+    function render(filter = '') {
+      const keyword = filter.trim().toLowerCase();
+      nav.innerHTML = '';
+
+      for (const group of catalog) {
+        const items = group.items.filter(item => {
+          const text = `${group.group} ${item.title} ${item.desc}`.toLowerCase();
+          return !keyword || text.includes(keyword);
+        });
+        if (!items.length) continue;
+
+        const section = document.createElement('section');
+        section.className = 'group' + (collapsedGroups.has(group.group) && !keyword ? ' collapsed' : '');
+
+        const header = document.createElement('button');
+        header.className = 'group-header';
+        header.innerHTML = `<span class="chevron">⌄</span><span class="group-name">${group.group}</span><span class="group-count">${items.length}</span>`;
+        header.addEventListener('click', () => {
+          if (collapsedGroups.has(group.group)) collapsedGroups.delete(group.group);
+          else collapsedGroups.add(group.group);
+          render(search.value);
+        });
+        section.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'group-items';
+        for (const item of items) {
+          const fullItem = withGroup(item, group);
+          const button = document.createElement('button');
+          button.className = 'item' + (item.path === activePath ? ' active' : '');
+          button.title = `${item.title}\n${item.desc}`;
+          button.innerHTML = `
+            <span class="doc-dot">${group.icon}</span>
+            <span>
+              <span class="item-title">${item.title}</span>
+              <span class="item-desc">${item.desc}</span>
+            </span>`;
+          button.addEventListener('click', () => loadDoc(fullItem));
+          body.appendChild(button);
+        }
+        section.appendChild(body);
+        nav.appendChild(section);
+      }
+    }
+
+    function loadDoc(item) {
+      activePath = item.path;
+      viewer.src = item.path;
+      docTitle.textContent = item.title;
+      breadcrumb.textContent = `${item.group} / ${item.desc}`;
+      openBtn.href = item.path;
+      location.hash = encodeURIComponent(item.path);
+      render(search.value);
+    }
+
+    toggleSidebar.addEventListener('click', () => {
+      app.classList.toggle('sidebar-collapsed');
+      localStorage.setItem('ai-library-sidebar-collapsed', app.classList.contains('sidebar-collapsed') ? '1' : '0');
+    });
+
+    search.addEventListener('input', () => render(search.value));
+
+    if (localStorage.getItem('ai-library-sidebar-collapsed') === '1') {
+      app.classList.add('sidebar-collapsed');
+    }
+
+    const all = flatCatalog();
+    const hashPath = decodeURIComponent(location.hash.replace(/^#/, ''));
+    const initial = all.find(item => item.path === hashPath) || all[0];
+    render();
+    loadDoc(initial);
+  </script>
+</body>
+</html>
