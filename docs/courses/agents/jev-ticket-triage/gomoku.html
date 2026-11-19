@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Jev 模型实时选择五子棋落点，人机对战与概率解释。">
+  <title>Jev 五子棋 · 人机对战</title>
+  <link rel="stylesheet" href="gomoku.css">
+  <link rel="stylesheet" href="gomoku-turn.css">
+  <script src="gomoku.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <header class="top"><div class="identity"><span class="logo">J</span><div><strong>JEV 五子棋</strong><small>HUMAN VS. SYSTEM ONE</small></div></div><nav><a href="gomoku-guide.html">玩法与源码</a><a href="http://127.0.0.1:8766/" target="_blank" rel="noopener">本机打开游戏 ↗</a></nav></header>
+    <main>
+      <section class="intro"><span class="eyebrow">PLAY AGAINST A DECISION MODEL</span><h1>落下一子，看看 <em>Jev</em> 怎么应对。</h1><p>选择谁先手：先下的一方执黑 X，另一方执白 O。轮到 Jev 时，服务端向模型说明实际黑白归属、当前轮次、横竖斜五连规则与全部合法空位；右侧展示概率前六名及候选总数。一步必胜或必防是代码规则，会单独标记，不冒充模型决策。</p><div class="pills"><span>15 × 15 棋盘</span><span>可切换黑棋先手</span><span>全盘合法空位可选</span></div></section>
+      <div id="notice" role="status" class="notice">正在连接本地服务…</div>
+      <div class="layout">
+        <section class="boardpanel panel" aria-labelledby="boardTitle"><div class="heading"><div><span class="eyebrow">01 / THE BOARD</span><h2 id="boardTitle">对局棋盘</h2></div><span id="moveCount" class="pill">第 0 手</span></div><div class="boardwrap"><div id="board" class="board" role="grid" aria-label="15乘15五子棋棋盘"></div></div><div class="boardfooter"><div id="turn" class="turn">等待开局</div><div class="boardbuttons"><label for="first" class="first-label">谁先下<select id="first"><option value="human">我先手 · 执黑</option><option value="ai">Jev 先手 · 执黑</option></select></label><button id="retry" type="button" hidden>重试 Jev 落子</button><button id="reset" type="button" disabled>按所选先手开局</button></div></div></section>
+        <aside class="right"><section class="panel insight"><span class="eyebrow">02 / WHY THIS MOVE</span><h2>Jev 的决策记录</h2><p class="muted">正常回合来自在线 Choice；必胜/必防由规则引擎执行。两者在这里分开显示。</p><div id="decision" class="decision">选择先手，轮到 Jev 时可查看它的第一步。</div><div id="choices" class="choices"></div><div id="usage" class="usage"></div></section><section class="panel record"><span class="eyebrow">03 / MATCH LOG</span><h2>回合记录</h2><ol id="history"><li>对局尚未开始。</li></ol></section></aside>
+      </div>
+      <section class="panel source"><div><span class="eyebrow">SOURCE & RULES</span><h2>模型只做选择，胜负由代码验证</h2><p>服务仅监听 127.0.0.1；浏览器看不到你的 API Key。为保证演示可信，接口不可用时不会假装 Jev 已下棋。</p></div><div class="links"><a href="gomoku.py">棋盘与候选点源码 ↗</a><a href="gomoku_server.py">本地服务器源码 ↗</a><a href="gomoku.js">网页交互源码 ↗</a><a href="test_gomoku.py">测试源码 ↗</a></div></section>
+    </main><footer>TypeSafe Jev 第三方 API 实战 · 密钥仅放本地服务端 · 此游戏并非官方五子棋 AI 产品</footer>
+  </div>
+</body>
+</html>

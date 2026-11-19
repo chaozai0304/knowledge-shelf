@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jev × Qwen · 五子棋增强对战</title>
+  <link rel="stylesheet" href="gomoku.css"><link rel="stylesheet" href="arena.css">
+  <script defer src="arena.js"></script>
+</head>
+<body><div class="app">
+  <header class="top"><div class="identity"><span class="logo">棋</span><div><strong>Jev × Qwen 对战实验室</strong><small>15×15 · MODEL ARENA</small></div></div><a href="arena-guide.html">玩法、启动与源码</a></header>
+  <main><section class="intro"><span class="eyebrow">DECISION MODEL VS CHAT MODEL</span><h1>两种模型，一张棋盘。</h1><p>选择人类对手或让 Jev 与你平台的 Qwen 自动对弈。棋盘规则和胜负由代码判定；模型仅选择合法落点。每次 AI 落子触发对应服务端 API 调用，模型不可用就停在当前局面。</p></section>
+  <section class="config panel" aria-label="对局设置">
+    <label>对局模式<select id="mode"><option value="human_jev">我 vs Jev</option><option value="human_qwen">我 vs qwen3.7-flash-non-thinking</option><option value="jev_qwen">Jev vs qwen3.7-flash-non-thinking</option></select></label>
+    <label id="humanOrder">人类先手<select id="humanFirst"><option value="true">我执黑先下</option><option value="false">AI 执黑先下</option></select></label>
+    <label id="modelOrder" hidden>模型先手<select id="jevFirst"><option value="true">Jev 执黑</option><option value="false">qwen3.7-flash-non-thinking 执黑</option></select></label>
+    <button id="start" type="button">开始新局</button><button id="step" type="button" disabled>AI 走一步</button><button id="auto" type="button" disabled>自动对战</button>
+  </section>
+  <div id="notice" role="status" class="notice">连接本机服务中…</div>
+  <div class="layout"><section class="panel boardpanel"><div class="heading"><div><span class="eyebrow">THE BOARD</span><h2>对战棋盘</h2></div><span id="counter" class="pill">第 0 手</span></div><div class="boardwrap"><div id="board" class="board" role="grid" aria-label="15乘15棋盘"></div></div><p id="turn" class="turn">等待开局</p></section>
+  <aside class="right"><section class="panel insight"><span class="eyebrow">LAST DECISION</span><h2>最新落子</h2><div id="decision" class="decision">先选择模式并开始。</div><div id="usage" class="usage"></div></section><section class="panel record"><span class="eyebrow">MATCH LOG</span><h2>回合记录</h2><ol id="history"><li>暂无落子</li></ol></section></aside></div>
+  <section class="panel source"><div><h2>安全边界</h2><p>Jev 与平台 Key 只在本地 Python 服务端；浏览器无权发送棋盘状态。网关为你提供的内网 HTTP 地址，请只在可信内网使用，避免跨不可信网络传输令牌。</p></div><div class="links"><a href="enhanced_match.py">对局源码</a><a href="enhanced_server.py">服务端源码</a><a href="arena-guide.html">配置步骤</a></div></section>
+  </main><footer>模型落点不代表棋力保证 · 逐次 API 调用可能产生费用 · 仅监听 127.0.0.1</footer>
+</div></body></html>
